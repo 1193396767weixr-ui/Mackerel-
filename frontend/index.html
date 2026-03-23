@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#667eea">
+    <title>英语每日记录</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; }
+        
+        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .login-title { text-align: center; margin-bottom: 30px; }
+        .login-title h1 { margin: 0; color: #667eea; font-size: 28px; }
+        .login-title p { margin: 10px 0 0; color: #909399; font-size: 14px; }
+        .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; }
+        .login-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; color: #909399; transition: all 0.3s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .login-tab.active { color: #667eea; border-bottom-color: #667eea; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #606266; font-size: 14px; }
+        .form-input { width: 100%; padding: 12px 15px; border: 2px solid #dcdfe6; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; outline: none; }
+        .form-input:focus { border-color: #667eea; }
+        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
+        .login-btn:active { transform: scale(0.98); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .app-container { max-width: 900px; margin: 0 auto; padding: 15px; padding-bottom: 80px; }
+        .header { text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: -15px -15px 20px -15px; color: white; border-radius: 0 0 20px 20px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 8px 0 0 0; opacity: 0.9; font-size: 14px; }
+        .header .user-info { margin-top: 10px; font-size: 12px; opacity: 0.8; }
+        .header .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-left: 10px; }
+        
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat-card { flex: 1; background: white; border-radius: 12px; padding: 15px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card .label { font-size: 12px; color: #909399; margin-bottom: 5px; }
+        .stat-card .value { font-size: 28px; font-weight: bold; }
+        .stat-card.words .value { color: #409EFF; }
+        .stat-card.phrases .value { color: #67C23A; }
+        .stat-card.sentences .value { color: #E6A23C; }
+        
+        .input-section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .input-section .section-title { font-size: 16px; font-weight: 600; color: #303133; margin-bottom: 15px; }
+        .type-selector { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .type-btn { flex: 1; min-width: 80px; padding: 10px 15px; border: 2px solid #dcdfe6; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s; font-size: 14px; color: #606266; }
+        .type-btn.active { border-color: #409EFF; background: #ecf5ff; color: #409EFF; }
+        .type-btn.active.phrases { border-color: #67C23A; background: #f0f9eb; color: #67C23A; }
+        .type-btn.active.sentences { border-color: #E6A23C; background: #fdf6ec; color: #E6A23C; }
+        .input-wrapper { display: flex; gap: 10px; }
+        .main-input { flex: 1; padding: 12px 15px; border: 2px solid #dcdfe6; border-radius: 10px; font-size: 16px; outline: none; transition: border-color 0.3s; }
+        .main-input:focus { border-color: #409EFF; }
+        .submit-btn { padding: 12px 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .auto-detect-hint { margin-top: 10px; font-size: 12px; color: #909399; text-align: center; }
+        .pos-display { margin-top: 10px; padding: 10px; background: #f5f7fa; border-radius: 8px; font-size: 13px; }
+        .pos-display .pos-label { color: #909399; margin-right: 8px; }
+        .pos-display .pos-tags { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+        .pos-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .pos-tag.noun { background: #e6f7ff; color: #1890ff; }
+        .pos-tag.verb { background: #fff1f0; color: #f5222d; }
+        .pos-tag.adjective { background: #f6ffed; color: #52c41a; }
+        .pos-tag.adverb { background: #fffbe6; color: #faad14; }
+        .pos-tag.preposition { background: #f9f0ff; color: #722ed1; }
+        .pos-tag.conjunction { background: #fff0f6; color: #eb2f96; }
+        .pos-tag.pronoun { background: #e6fffb; color: #13c2c2; }
+        .pos-tag.interjection { background: #fff7e6; color: #fa8c16; }
+        .pos-tag.unknown { background: #f5f5f5; color: #8c8c8c; }
+        
+        .tabs { display: flex; background: white; border-radius: 12px; padding: 5px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; color: #606266; transition: all 0.3s; }
+        .tab.active { background: #409EFF; color: white; }
+        
+        .search-bar { margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 12px 15px; border: none; border-radius: 12px; font-size: 14px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 6px 12px; border: 1px solid #dcdfe6; border-radius: 20px; background: white; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { border-color: #409EFF; background: #ecf5ff; color: #409EFF; }
+        .order-btn { padding: 6px 12px; border: 1px solid #dcdfe6; border-radius: 20px; background: white; font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        .order-btn.active { border-color: #67C23A; background: #f0f9eb; color: #67C23A; }
+        
+        .history-section { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .date-group { margin-bottom: 20px; }
+        .date-header { font-size: 16px; font-weight: 600; color: #303133; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #ebeef5; }
+        .category-section { margin-bottom: 12px; }
+        .category-title { font-size: 13px; color: #909399; margin-bottom: 8px; font-weight: 500; }
+        .item-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .item-tag { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .item-tag.words { background: #ecf5ff; color: #409EFF; }
+        .item-tag.phrases { background: #f0f9eb; color: #67C23A; }
+        .item-tag.sentences { background: #fdf6ec; color: #E6A23C; border-radius: 8px; padding: 8px 12px; width: 100%; }
+        .item-tag .word-content { display: flex; align-items: center; gap: 6px; }
+        .item-tag .word-pos { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,0.1); }
+        .item-tag .delete-btn { margin-left: 8px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+        .item-tag:hover .delete-btn { opacity: 1; }
+        
+        .total-section { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .total-category { margin-bottom: 20px; }
+        .total-category-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid; display: flex; align-items: center; gap: 8px; }
+        .total-category-title.words { color: #409EFF; border-color: #409EFF; }
+        .total-category-title.phrases { color: #67C23A; border-color: #67C23A; }
+        .total-category-title.sentences { color: #E6A23C; border-color: #E6A23C; }
+        .pos-group { margin-bottom: 12px; }
+        .pos-group-title { font-size: 13px; color: #606266; margin-bottom: 8px; font-weight: 500; }
+        
+        .toolbar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 15px; display: flex; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
+        .toolbar-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .toolbar-btn.export { background: #ecf5ff; color: #409EFF; }
+        .toolbar-btn.import { background: #f0f9eb; color: #67C23A; }
+        .toolbar-btn.clear { background: #fef0f0; color: #F56C6C; }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: #909399; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        
+        .loading-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #f3f3f3; border-top: 2px solid #409EFF; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; z-index: 1000; animation: fadeIn 0.3s; }
+        .toast.success { background: #67C23A; }
+        .toast.error { background: #F56C6C; }
+        .toast.warning { background: #E6A23C; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        
+        @media (max-width: 600px) {
+            .stat-row { flex-wrap: wrap; }
+            .stat-card { min-width: calc(50% - 5px); }
+            .stat-card:last-child { min-width: 100%; }
+            .input-wrapper { flex-direction: column; }
+            .submit-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="login-container" v-if="!isLoggedIn">
+            <div class="login-card">
+                <div class="login-title">
+                    <h1>英语每日记录</h1>
+                    <p>每天进步一点点</p>
+                </div>
+                <div class="login-tabs">
+                    <div class="login-tab" :class="{ active: loginMode === 'login' }" @click="loginMode = 'login'">登录</div>
+                    <div class="login-tab" :class="{ active: loginMode === 'register' }" @click="loginMode = 'register'">注册</div>
+                </div>
+                <form @submit.prevent="handleAuth">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input class="form-input" v-model="username" placeholder="请输入用户名" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input class="form-input" type="password" v-model="password" placeholder="请输入密码" required minlength="6">
+                    </div>
+                    <button class="login-btn" type="submit" :disabled="isLoading">
+                        <span v-if="isLoading" class="loading-spinner"></span>
+                        {{ loginMode === 'login' ? '登录' : '注册' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="app-container" v-else>
+            <div class="header">
+                <h1>英语每日记录</h1>
+                <p>每天进步一点点</p>
+                <div class="user-info">
+                    欢迎, {{ userInfo.username }}
+                    <button class="logout-btn" @click="logout">退出</button>
+                </div>
+            </div>
+            
+            <div class="stat-row">
+                <div class="stat-card words">
+                    <div class="label">累计单词</div>
+                    <div class="value">{{ stats.words }}</div>
+                </div>
+                <div class="stat-card phrases">
+                    <div class="label">累计词组</div>
+                    <div class="value">{{ stats.phrases }}</div>
+                </div>
+                <div class="stat-card sentences">
+                    <div class="label">累计句式</div>
+                    <div class="value">{{ stats.sentences }}</div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <div class="section-title">录入新知识</div>
+                <div class="type-selector">
+                    <button class="type-btn" :class="{ active: currentType === 'auto' }" @click="currentType = 'auto'">自动识别</button>
+                    <button class="type-btn words" :class="{ active: currentType === 'words' }" @click="currentType = 'words'">单词</button>
+                    <button class="type-btn phrases" :class="{ active: currentType === 'phrases' }" @click="currentType = 'phrases'">词组</button>
+                    <button class="type-btn sentences" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
+                </div>
+                <div class="input-wrapper">
+                    <input class="main-input" v-model="inputContent" placeholder="输入单词、词组或句式..." @keyup.enter="addRecord" @input="onInputChange">
+                    <button class="submit-btn" @click="addRecord" :disabled="isLoading">
+                        <span v-if="isLoading" class="loading-spinner"></span>
+                        {{ isLoading ? '查询中' : '保存' }}
+                    </button>
+                </div>
+                <div class="auto-detect-hint" v-if="currentType === 'auto' && inputContent">将识别为: {{ detectType(inputContent) }}</div>
+                <div class="pos-display" v-if="detectedPos.length > 0 && currentType === 'auto'">
+                    <span class="pos-label">词性:</span>
+                    <div class="pos-tags">
+                        <span v-for="pos in detectedPos" :key="pos" class="pos-tag" :class="getPosClass(pos)">{{ getPosChinese(pos) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab" :class="{ active: activeTab === 'timeline' }" @click="activeTab = 'timeline'">时间线</div>
+                <div class="tab" :class="{ active: activeTab === 'total' }" @click="activeTab = 'total'">全部积累</div>
+            </div>
+            
+            <div class="search-bar" v-show="activeTab === 'timeline'">
+                <input class="search-input" v-model="searchKeyword" placeholder="搜索记录...">
+            </div>
+            
+            <div class="filter-bar" v-show="activeTab === 'total'">
+                <button class="filter-btn" :class="{ active: posFilter === 'all' }" @click="posFilter = 'all'">全部</button>
+                <button class="filter-btn" :class="{ active: posFilter === 'noun' }" @click="posFilter = 'noun'">名词</button>
+                <button class="filter-btn" :class="{ active: posFilter === 'verb' }" @click="posFilter = 'verb'">动词</button>
+                <button class="filter-btn" :class="{ active: posFilter === 'adjective' }" @click="posFilter = 'adjective'">形容词</button>
+                <button class="filter-btn" :class="{ active: posFilter === 'adverb' }" @click="posFilter = 'adverb'">副词</button>
+                <button class="order-btn" :class="{ active: isShuffled }" @click="toggleShuffle">
+                    {{ isShuffled ? '🔀 乱序' : '📋 顺序' }}
+                </button>
+            </div>
+            
+            <div class="history-section" v-show="activeTab === 'timeline'">
+                <div v-if="filteredDates.length === 0" class="empty-state">
+                    <div class="icon">📝</div>
+                    <div>暂无记录</div>
+                    <div style="font-size: 12px; margin-top: 5px;">开始添加你的第一个学习笔记吧</div>
+                </div>
+                <div v-else>
+                    <div class="date-group" v-for="date in filteredDates" :key="date">
+                        <div class="date-header">📅 {{ date }}</div>
+                        <div class="category-section" v-if="getFilteredItems(date, 'words').length > 0">
+                            <div class="category-title">单词</div>
+                            <div class="item-list">
+                                <span class="item-tag words" v-for="item in getFilteredItems(date, 'words')" :key="item.id">
+                                    <span class="word-content">
+                                        {{ item.text }}
+                                        <span v-if="item.pos" class="word-pos">{{ getPosChinese(item.pos) }}</span>
+                                    </span>
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'words', item.id)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="category-section" v-if="getFilteredItems(date, 'phrases').length > 0">
+                            <div class="category-title">词组</div>
+                            <div class="item-list">
+                                <span class="item-tag phrases" v-for="item in getFilteredItems(date, 'phrases')" :key="item.id">
+                                    {{ item.text }}
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'phrases', item.id)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="category-section" v-if="getFilteredItems(date, 'sentences').length > 0">
+                            <div class="category-title">句式</div>
+                            <div class="item-list">
+                                <span class="item-tag sentences" v-for="item in getFilteredItems(date, 'sentences')" :key="item.id">
+                                    {{ item.text }}
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'sentences', item.id)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="total-section" v-show="activeTab === 'total'">
+                <div class="total-category" v-if="displayWords.length > 0">
+                    <div class="total-category-title words">全部单词 ({{ displayWords.length }})</div>
+                    <div v-for="posGroup in groupedDisplayWords" :key="posGroup.pos">
+                        <div class="pos-group" v-if="posGroup.items.length > 0">
+                            <div class="pos-group-title">
+                                <span class="pos-tag" :class="getPosClass(posGroup.pos)">{{ getPosChinese(posGroup.pos) }}</span>
+                                ({{ posGroup.items.length }})
+                            </div>
+                            <div class="item-list">
+                                <span class="item-tag words" v-for="item in posGroup.items" :key="item.id">{{ item.text }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="total-category" v-if="allItems.phrases.length > 0 && posFilter === 'all'">
+                    <div class="total-category-title phrases">全部词组 ({{ allItems.phrases.length }})</div>
+                    <div class="item-list">
+                        <span class="item-tag phrases" v-for="item in (isShuffled ? shuffledPhrases : allItems.phrases)" :key="item.id">{{ item.text }}</span>
+                    </div>
+                </div>
+                <div class="total-category" v-if="allItems.sentences.length > 0 && posFilter === 'all'">
+                    <div class="total-category-title sentences">全部句式 ({{ allItems.sentences.length }})</div>
+                    <div class="item-list" style="flex-direction: column;">
+                        <span class="item-tag sentences" v-for="item in (isShuffled ? shuffledSentences : allItems.sentences)" :key="item.id">{{ item.text }}</span>
+                    </div>
+                </div>
+                <div v-if="displayWords.length === 0 && (posFilter !== 'all' || (allItems.phrases.length === 0 && allItems.sentences.length === 0))" class="empty-state">
+                    <div class="icon">📚</div>
+                    <div>暂无积累</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar" v-if="isLoggedIn">
+            <button class="toolbar-btn export" @click="exportData">导出数据</button>
+            <button class="toolbar-btn import" @click="triggerImport">导入数据</button>
+        </div>
+        
+        <input type="file" ref="fileInput" @change="importData" accept=".json" style="display: none;">
+        
+        <div class="toast" v-if="toast.show" :class="toast.type">{{ toast.message }}</div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+        const { createApp, ref, computed, watch, onMounted } = Vue;
+        
+        const API_BASE = 'http://localhost:5000/api';
+        
+        const POS_MAP = {
+            'noun': '名词', 'verb': '动词', 'adjective': '形容词', 'adverb': '副词',
+            'preposition': '介词', 'conjunction': '连词', 'pronoun': '代词',
+            'interjection': '感叹词', 'unknown': '未知'
+        };
+        
+        const POS_CLASS_MAP = {
+            'noun': 'noun', 'verb': 'verb', 'adjective': 'adjective', 'adverb': 'adverb',
+            'preposition': 'preposition', 'conjunction': 'conjunction', 'pronoun': 'pronoun',
+            'interjection': 'interjection', 'unknown': 'unknown'
+        };
+
+        createApp({
+            setup() {
+                const isLoggedIn = ref(false);
+                const loginMode = ref('login');
+                const username = ref('');
+                const password = ref('');
+                const userInfo = ref({});
+                const token = ref(localStorage.getItem('token') || '');
+                const records = ref({});
+                const stats = ref({ words: 0, phrases: 0, sentences: 0 });
+                const currentType = ref('auto');
+                const inputContent = ref('');
+                const activeTab = ref('timeline');
+                const searchKeyword = ref('');
+                const detectedPos = ref([]);
+                const isLoading = ref(false);
+                const posFilter = ref('all');
+                const isShuffled = ref(false);
+                const posCache = ref({});
+                const toast = ref({ show: false, message: '', type: 'success' });
+                const fileInput = ref(null);
+
+                const showToast = (message, type = 'success') => {
+                    toast.value = { show: true, message, type };
+                    setTimeout(() => { toast.value.show = false; }, 2000);
+                };
+
+                const getHeaders = () => ({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token.value}`
+                });
+
+                const checkAuth = async () => {
+                    if (!token.value) return;
+                    try {
+                        const res = await fetch(`${API_BASE}/user/info`, { headers: getHeaders() });
+                        if (res.ok) {
+                            const data = await res.json();
+                            userInfo.value = data.user;
+                            stats.value = data.stats;
+                            isLoggedIn.value = true;
+                            await fetchRecords();
+                        } else {
+                            localStorage.removeItem('token');
+                            token.value = '';
+                        }
+                    } catch (e) {
+                        console.error('Auth check failed:', e);
+                    }
+                };
+
+                const handleAuth = async () => {
+                    if (!username.value || !password.value) return;
+                    isLoading.value = true;
+                    try {
+                        const endpoint = loginMode.value === 'login' ? '/login' : '/register';
+                        const res = await fetch(`${API_BASE}${endpoint}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: username.value, password: password.value })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            token.value = data.access_token;
+                            localStorage.setItem('token', data.access_token);
+                            userInfo.value = data.user;
+                            isLoggedIn.value = true;
+                            showToast(data.message);
+                            await fetchRecords();
+                        } else {
+                            showToast(data.error, 'error');
+                        }
+                    } catch (e) {
+                        showToast('网络错误', 'error');
+                    }
+                    isLoading.value = false;
+                };
+
+                const logout = () => {
+                    localStorage.removeItem('token');
+                    token.value = '';
+                    isLoggedIn.value = false;
+                    userInfo.value = {};
+                    records.value = {};
+                };
+
+                const fetchRecords = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/records`, { headers: getHeaders() });
+                        if (res.ok) {
+                            records.value = await res.json();
+                            updateStats();
+                        }
+                    } catch (e) {
+                        console.error('Fetch records failed:', e);
+                    }
+                };
+
+                const updateStats = () => {
+                    let w = 0, p = 0, s = 0;
+                    for (const date in records.value) {
+                        w += records.value[date].words?.length || 0;
+                        p += records.value[date].phrases?.length || 0;
+                        s += records.value[date].sentences?.length || 0;
+                    }
+                    stats.value = { words: w, phrases: p, sentences: s };
+                };
+
+                const allItems = computed(() => {
+                    const words = [], phrases = [], sentences = [];
+                    const dates = Object.keys(records.value).sort((a, b) => new Date(b) - new Date(a));
+                    dates.forEach(date => {
+                        words.push(...(records.value[date].words || []));
+                        phrases.push(...(records.value[date].phrases || []));
+                        sentences.push(...(records.value[date].sentences || []));
+                    });
+                    return { words, phrases, sentences };
+                });
+
+                const filteredWords = computed(() => {
+                    if (posFilter.value === 'all') return allItems.value.words;
+                    if (posFilter.value === 'other') {
+                        return allItems.value.words.filter(item => !['noun', 'verb', 'adjective', 'adverb'].includes(item.pos));
+                    }
+                    return allItems.value.words.filter(item => item.pos === posFilter.value);
+                });
+
+                const displayWords = computed(() => isShuffled.value ? shuffledWords.value : filteredWords.value);
+                
+                const shuffledWords = ref([]);
+                const shuffledPhrases = ref([]);
+                const shuffledSentences = ref([]);
+
+                const shuffleArray = (arr) => {
+                    const newArr = [...arr];
+                    for (let i = newArr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+                    }
+                    return newArr;
+                };
+
+                const toggleShuffle = () => {
+                    isShuffled.value = !isShuffled.value;
+                    if (isShuffled.value) {
+                        shuffledWords.value = shuffleArray(filteredWords.value);
+                        shuffledPhrases.value = shuffleArray(allItems.value.phrases);
+                        shuffledSentences.value = shuffleArray(allItems.value.sentences);
+                    }
+                };
+
+                watch(posFilter, () => {
+                    if (isShuffled.value) {
+                        shuffledWords.value = shuffleArray(filteredWords.value);
+                    }
+                });
+
+                const groupedDisplayWords = computed(() => {
+                    const groups = [
+                        { pos: 'noun', items: [] }, { pos: 'verb', items: [] },
+                        { pos: 'adjective', items: [] }, { pos: 'adverb', items: [] }, { pos: 'other', items: [] }
+                    ];
+                    displayWords.value.forEach(item => {
+                        const group = groups.find(g => g.pos === item.pos);
+                        if (group) group.items.push(item);
+                        else groups.find(g => g.pos === 'other').items.push(item);
+                    });
+                    return groups;
+                });
+
+                const filteredDates = computed(() => {
+                    const dates = Object.keys(records.value).sort((a, b) => new Date(b) - new Date(a));
+                    if (!searchKeyword.value.trim()) return dates;
+                    const keyword = searchKeyword.value.toLowerCase();
+                    return dates.filter(date => {
+                        const data = records.value[date];
+                        const allText = [
+                            ...(data.words || []), ...(data.phrases || []), ...(data.sentences || [])
+                        ].map(i => i.text).join(' ').toLowerCase();
+                        return allText.includes(keyword);
+                    });
+                });
+
+                const getPosChinese = (pos) => POS_MAP[pos] || pos;
+                const getPosClass = (pos) => POS_CLASS_MAP[pos] || 'unknown';
+
+                const fetchWordPos = async (word) => {
+                    const cleanWord = word.toLowerCase().trim().split(/\s+/)[0];
+                    if (posCache.value[cleanWord]) return posCache.value[cleanWord];
+                    try {
+                        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`);
+                        if (!res.ok) return ['unknown'];
+                        const data = await res.json();
+                        const posSet = new Set();
+                        if (Array.isArray(data)) {
+                            data.forEach(entry => {
+                                if (entry.meanings) {
+                                    entry.meanings.forEach(m => {
+                                        if (m.partOfSpeech) {
+                                            const pos = m.partOfSpeech.toLowerCase();
+                                            if (POS_MAP[pos]) posSet.add(pos);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        const result = Array.from(posSet);
+                        if (result.length === 0) result.push('unknown');
+                        posCache.value[cleanWord] = result;
+                        return result;
+                    } catch (e) {
+                        return ['unknown'];
+                    }
+                };
+
+                let debounceTimer = null;
+                const onInputChange = () => {
+                    if (currentType.value !== 'auto') { detectedPos.value = []; return; }
+                    const text = inputContent.value.trim();
+                    if (!text || text.split(/\s+/).length > 2) { detectedPos.value = []; return; }
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(async () => {
+                        isLoading.value = true;
+                        detectedPos.value = await fetchWordPos(text);
+                        isLoading.value = false;
+                    }, 500);
+                };
+
+                const detectType = (text) => {
+                    const trimmed = text.trim();
+                    const wordCount = trimmed.split(/\s+/).length;
+                    const hasPunctuation = /[.!?。！？]/.test(trimmed);
+                    if (hasPunctuation || wordCount > 6) return '句式';
+                    else if (wordCount <= 2) return '单词';
+                    else return '词组';
+                };
+
+                const getAutoType = (text) => {
+                    const trimmed = text.trim();
+                    const wordCount = trimmed.split(/\s+/).length;
+                    const hasPunctuation = /[.!?。！？]/.test(trimmed);
+                    if (hasPunctuation || wordCount > 6) return 'sentences';
+                    else if (wordCount <= 2) return 'words';
+                    else return 'phrases';
+                };
+
+                const addRecord = async () => {
+                    const text = inputContent.value.trim();
+                    if (!text) { showToast('请输入学习内容', 'warning'); return; }
+                    
+                    const type = currentType.value === 'auto' ? getAutoType(text) : currentType.value;
+                    let pos = null;
+                    
+                    if (type === 'words') {
+                        if (detectedPos.value.length > 0) {
+                            pos = detectedPos.value[0];
+                        } else {
+                            isLoading.value = true;
+                            const posResult = await fetchWordPos(text);
+                            pos = posResult[0];
+                            isLoading.value = false;
+                        }
+                    }
+                    
+                    try {
+                        const res = await fetch(`${API_BASE}/records`, {
+                            method: 'POST',
+                            headers: getHeaders(),
+                            body: JSON.stringify({ content: text, type, pos })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            showToast('记录成功！');
+                            if (!records.value[data.record.date]) {
+                                records.value[data.record.date] = { words: [], phrases: [], sentences: [] };
+                            }
+                            records.value[data.record.date][data.record.type].push(data.record);
+                            updateStats();
+                            inputContent.value = '';
+                            detectedPos.value = [];
+                        } else {
+                            showToast(data.error, 'error');
+                        }
+                    } catch (e) {
+                        showToast('网络错误', 'error');
+                    }
+                };
+
+                const getFilteredItems = (date, type) => {
+                    const items = records.value[date]?.[type] || [];
+                    if (!searchKeyword.value.trim()) return items;
+                    return items.filter(item => item.text.toLowerCase().includes(searchKeyword.value.toLowerCase()));
+                };
+
+                const deleteItem = async (date, type, id) => {
+                    if (!confirm('确定删除这条记录吗？')) return;
+                    try {
+                        const res = await fetch(`${API_BASE}/records/${id}`, {
+                            method: 'DELETE',
+                            headers: getHeaders()
+                        });
+                        if (res.ok) {
+                            records.value[date][type] = records.value[date][type].filter(i => i.id !== id);
+                            if (records.value[date].words.length === 0 && 
+                                records.value[date].phrases.length === 0 && 
+                                records.value[date].sentences.length === 0) {
+                                delete records.value[date];
+                            }
+                            updateStats();
+                            showToast('删除成功');
+                        }
+                    } catch (e) {
+                        showToast('删除失败', 'error');
+                    }
+                };
+
+                const exportData = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/records/export`, { headers: getHeaders() });
+                        const data = await res.json();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `英语记录_${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('导出成功');
+                    } catch (e) {
+                        showToast('导出失败', 'error');
+                    }
+                };
+
+                const triggerImport = () => fileInput.value.click();
+
+                const importData = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            const res = await fetch(`${API_BASE}/records/import`, {
+                                method: 'POST',
+                                headers: getHeaders(),
+                                body: JSON.stringify({ records: data })
+                            });
+                            const result = await res.json();
+                            showToast(result.message);
+                            await fetchRecords();
+                        } catch (e) {
+                            showToast('导入失败', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                };
+
+                onMounted(() => {
+                    checkAuth();
+                    const savedCache = localStorage.getItem('english_pos_cache');
+                    if (savedCache) {
+                        try { posCache.value = JSON.parse(savedCache); } catch (e) {}
+                    }
+                });
+
+                watch(posCache, (newVal) => {
+                    localStorage.setItem('english_pos_cache', JSON.stringify(newVal));
+                }, { deep: true });
+
+                return {
+                    isLoggedIn, loginMode, username, password, userInfo, records, stats,
+                    currentType, inputContent, activeTab, searchKeyword, detectedPos,
+                    isLoading, posFilter, isShuffled, toast, fileInput, allItems,
+                    filteredWords, displayWords, shuffledWords, shuffledPhrases, shuffledSentences,
+                    groupedDisplayWords, filteredDates, handleAuth, logout, getPosChinese, getPosClass,
+                    onInputChange, detectType, addRecord, getFilteredItems, deleteItem,
+                    exportData, triggerImport, importData, toggleShuffle, showToast
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

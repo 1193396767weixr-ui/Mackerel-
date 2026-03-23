@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="英语记录">
+    <meta name="theme-color" content="#f8f6f3">
+    <meta name="description" content="每天进步一点点，英语学习记录与背诵工具">
+    <title>英语每日记录</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&display=swap');
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
+        html, body { 
+            font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif; 
+            min-height: 100vh; 
+            background: #f8f6f3;
+            color: #3d3d3d;
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .app { min-height: 100vh; padding-bottom: 90px; }
+        
+        .page { 
+            display: none; 
+            animation: pageIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .page.active { display: block; }
+        
+        @keyframes pageIn { 
+            from { opacity: 0; transform: translateY(16px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .header { 
+            padding: 48px 28px 36px; 
+            text-align: center;
+        }
+        .header-date {
+            font-size: 12px;
+            color: #a0a0a0;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .header-title { 
+            font-size: 26px; 
+            font-weight: 400; 
+            letter-spacing: 6px; 
+            color: #2a2a2a;
+            margin-bottom: 6px;
+        }
+        .header-subtitle { 
+            font-size: 13px; 
+            color: #b0b0b0; 
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .stats-container { 
+            padding: 0 24px; 
+            margin-bottom: 28px;
+        }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px;
+        }
+        .stat-item { 
+            text-align: center; 
+            padding: 18px 6px;
+            background: #fff;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .stat-item:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 32px rgba(0,0,0,0.06); 
+        }
+        .stat-number { 
+            font-size: 28px; 
+            font-weight: 300; 
+            color: #2a2a2a;
+            line-height: 1;
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+        .stat-label { 
+            font-size: 11px; 
+            color: #b0b0b0; 
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .section { padding: 0 24px; margin-bottom: 28px; }
+        .section-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 16px;
+        }
+        .section-title { 
+            font-size: 15px; 
+            font-weight: 400; 
+            color: #2a2a2a;
+            letter-spacing: 2px;
+        }
+        .section-action { 
+            font-size: 12px; 
+            color: #b0b0b0; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        .section-action:hover { color: #666; }
+        
+        .input-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        
+        .type-tabs { 
+            display: flex; 
+            gap: 6px; 
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .type-tabs::-webkit-scrollbar { display: none; }
+        .type-tab { 
+            padding: 10px 16px; 
+            border-radius: 24px; 
+            font-size: 13px; 
+            color: #888;
+            background: transparent;
+            border: 1px solid #e8e6e3;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            letter-spacing: 1px;
+        }
+        .type-tab.active { 
+            background: #2a2a2a; 
+            color: #fff;
+            border-color: #2a2a2a;
+        }
+        .type-tab:hover:not(.active) { 
+            border-color: #ccc; 
+            color: #555;
+        }
+        
+        .input-area { margin-bottom: 14px; }
+        .input-field {
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid #ebe8e5;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #faf9f7;
+            letter-spacing: 0.5px;
+        }
+        .input-field:focus { 
+            border-color: #2a2a2a; 
+            background: #fff;
+        }
+        .input-field::placeholder { color: #c0c0c0; }
+        
+        .textarea-field {
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.9;
+        }
+        
+        .translation-field {
+            margin-top: 10px;
+        }
+        
+        .hint-text {
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-top: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #2a2a2a;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 3px;
+            font-weight: 400;
+        }
+        .submit-btn:hover { 
+            background: #1a1a1a;
+            transform: translateY(-1px);
+        }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { background: #d0d0d0; cursor: not-allowed; transform: none; }
+        
+        .content-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 20px 22px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-card:hover { 
+            box-shadow: 0 8px 28px rgba(0,0,0,0.06); 
+            transform: translateY(-2px);
+        }
+        
+        .date-label {
+            font-size: 13px;
+            color: #b0b0b0;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f2f0ed;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .category-block { margin-bottom: 18px; }
+        .category-block:last-child { margin-bottom: 0; }
+        .category-name {
+            font-size: 11px;
+            color: #b0b0b0;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .item-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .item-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #f8f6f3;
+            border-radius: 24px;
+            font-size: 14px;
+            color: #3d3d3d;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+        .item-chip:hover { 
+            background: #f0ede8;
+            transform: translateY(-1px);
+        }
+        .item-chip.word { background: #f5f8ff; color: #4a7cb5; }
+        .item-chip.word:hover { background: #e8f0ff; }
+        .item-chip.phrase { background: #f0fff4; color: #3a8c5a; }
+        .item-chip.phrase:hover { background: #e0f5e8; }
+        .item-chip.sentence { background: #fff8f0; color: #b5854a; }
+        .item-chip.sentence:hover { background: #fff0e0; }
+        .item-chip.passage { background: #faf5ff; color: #8a5ab5; }
+        .item-chip.passage:hover { background: #f5eaff; }
+        
+        .item-pos {
+            font-size: 10px;
+            padding: 2px 8px;
+            background: rgba(0,0,0,0.06);
+            border-radius: 10px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+        }
+        .item-translation {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-left: 8px;
+        }
+        .item-delete {
+            position: absolute;
+            right: -6px;
+            top: -6px;
+            width: 20px;
+            height: 20px;
+            background: #ff6b6b;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255,107,107,0.3);
+        }
+        .item-chip:hover .item-delete { opacity: 1; }
+        
+        .sentence-item {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 14px;
+            line-height: 1.8;
+        }
+        
+        .passage-item {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 18px;
+            border-radius: 14px;
+        }
+        .passage-title {
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: #2a2a2a;
+            letter-spacing: 1px;
+        }
+        .passage-preview {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.7;
+        }
+        
+        .search-bar {
+            padding: 0 24px;
+            margin-bottom: 18px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 16px 22px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.02);
+            border-radius: 28px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+        .search-input:focus {
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+        .search-input::placeholder { color: #c0c0c0; }
+        
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            padding: 0 24px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .filter-row::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            padding: 10px 18px;
+            background: #fff;
+            border: 1px solid #ebe8e5;
+            border-radius: 24px;
+            font-size: 13px;
+            color: #888;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            letter-spacing: 1px;
+        }
+        .filter-chip.active {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #2a2a2a;
+        }
+        .filter-chip:hover:not(.active) {
+            border-color: #ccc;
+        }
+        
+        .recite-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .recite-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid #f5f3f0;
+        }
+        .recite-item:first-child { padding-top: 0; }
+        .recite-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .recite-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: #f5f3f0;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+        .recite-toggle:hover { background: #ebe8e4; transform: scale(1.05); }
+        .recite-toggle.show { 
+            background: #2a2a2a; 
+            color: #fff;
+        }
+        .recite-content { flex: 1; }
+        .recite-english {
+            font-size: 16px;
+            color: #2a2a2a;
+            margin-bottom: 10px;
+            line-height: 1.7;
+            letter-spacing: 0.5px;
+        }
+        .recite-chinese {
+            font-size: 14px;
+            color: #888;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+        }
+        .recite-chinese.hidden {
+            opacity: 0;
+            filter: blur(10px);
+            user-select: none;
+        }
+        .recite-badge {
+            padding: 5px 12px;
+            background: #f5f3f0;
+            border-radius: 14px;
+            font-size: 11px;
+            color: #888;
+            flex-shrink: 0;
+            letter-spacing: 1px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: #b0b0b0;
+        }
+        .empty-icon {
+            font-size: 52px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+        .empty-text {
+            font-size: 15px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .empty-hint {
+            font-size: 13px;
+            color: #c0c0c0;
+            letter-spacing: 0.5px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            padding: 14px 24px 20px;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.04);
+            z-index: 100;
+            border-top: 1px solid rgba(0,0,0,0.02);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 28px;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 24px;
+            height: 2px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            transition: transform 0.3s ease;
+        }
+        .nav-item.active { color: #2a2a2a; }
+        .nav-item.active::after { transform: translateX(-50%) scaleX(1); }
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+            transition: transform 0.3s ease;
+        }
+        .nav-item:hover .nav-icon { transform: translateY(-2px); }
+        .nav-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .toolbar-actions {
+            position: fixed;
+            bottom: 85px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 99;
+        }
+        .action-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.04);
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-btn:hover { 
+            transform: scale(1.08);
+            box-shadow: 0 6px 28px rgba(0,0,0,0.12);
+        }
+        .action-btn:active { transform: scale(0.95); }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 150;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 90%;
+            width: 360px;
+        }
+        .install-prompt.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .install-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .install-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .install-text {
+            flex: 1;
+        }
+        .install-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2a2a2a;
+            margin-bottom: 2px;
+        }
+        .install-desc {
+            font-size: 12px;
+            color: #888;
+        }
+        .install-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .install-btn {
+            background: #2a2a2a;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .install-dismiss {
+            background: #f5f3f0;
+            color: #666;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 560px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 400;
+            color: #2a2a2a;
+            letter-spacing: 2px;
+        }
+        .modal-close {
+            background: #f5f3f0;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 18px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .modal-close:hover { background: #ebe8e4; color: #555; }
+        .modal-body {
+            font-size: 15px;
+            line-height: 1.9;
+            color: #3d3d3d;
+            letter-spacing: 0.5px;
+        }
+        .modal-translation {
+            margin-top: 24px;
+            padding: 18px;
+            background: #f8f6f3;
+            border-radius: 14px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 28px;
+            background: #2a2a2a;
+            color: #fff;
+            border-radius: 28px;
+            font-size: 14px;
+            z-index: 300;
+            animation: toastIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 1px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        
+        .slide-up-enter-active, .slide-up-leave-active {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .slide-up-enter-from, .slide-up-leave-to {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-item { padding: 16px 6px; }
+            .stat-number { font-size: 24px; }
+            .header { padding: 36px 20px 28px; }
+            .header-title { font-size: 22px; letter-spacing: 4px; }
+            .section { padding: 0 20px; }
+            .nav-item { padding: 10px 20px; }
+            .input-card { padding: 20px; }
+            .modal-content { padding: 24px; border-radius: 20px; }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            html, body { 
+                background: #1a1a1a; 
+                color: #e0e0e0; 
+            }
+            .header-title { color: #f0f0f0; }
+            .stat-item, .input-card, .content-card, .recite-card { 
+                background: #242424; 
+                border-color: rgba(255,255,0,0.05);
+            }
+            .input-field { 
+                background: #1a1a1a; 
+                border-color: #333;
+                color: #e0e0e0;
+            }
+            .input-field:focus { background: #242424; }
+            .input-field::placeholder { color: #666; }
+            .type-tab { 
+                border-color: #333; 
+                color: #888;
+            }
+            .type-tab.active { 
+                background: #f0f0f0; 
+                color: #1a1a1a;
+                border-color: #f0f0f0;
+            }
+            .bottom-nav { 
+                background: rgba(26,26,26,0.95);
+                border-top-color: rgba(255,255,255,0.05);
+            }
+            .nav-item { color: #666; }
+            .nav-item.active { color: #f0f0f0; }
+            .nav-item::after { background: #f0f0f0; }
+            .item-chip { background: #2a2a2a; color: #d0d0d0; }
+            .item-chip:hover { background: #333; }
+            .filter-chip { 
+                background: #242424; 
+                border-color: #333;
+                color: #888;
+            }
+            .filter-chip.active {
+                background: #f0f0f0;
+                color: #1a1a1a;
+                border-color: #f0f0f0;
+            }
+            .search-input { 
+                background: #242424; 
+                border-color: rgba(255,255,255,0.05);
+                color: #e0e0e0;
+            }
+            .search-input::placeholder { color: #666; }
+            .modal-content { background: #242424; }
+            .modal-title { color: #f0f0f0; }
+            .modal-body { color: #d0d0d0; }
+            .modal-translation { background: #1a1a1a; color: #999; }
+            .modal-close { background: #333; color: #888; }
+            .recite-toggle { background: #333; }
+            .recite-toggle:hover { background: #3a3a3a; }
+            .recite-toggle.show { background: #f0f0f0; color: #1a1a1a; }
+            .recite-badge { background: #333; color: #888; }
+            .action-btn { 
+                background: #333; 
+                border-color: rgba(255,255,255,0.05);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app">
+        <div class="install-prompt" v-if="showInstallPrompt" :class="{ show: installPromptVisible }">
+            <div class="install-content">
+                <div class="install-icon">📱</div>
+                <div class="install-text">
+                    <div class="install-title">添加到主屏幕</div>
+                    <div class="install-desc">获得更好的应用体验</div>
+                </div>
+                <div class="install-actions">
+                    <button class="install-btn" @click="installApp">安装</button>
+                    <button class="install-dismiss" @click="dismissInstall">稍后</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" :class="{ active: currentPage === 'home' }">
+            <div class="header">
+                <div class="header-date">{{ todayDate }}</div>
+                <h1 class="header-title">英语每日记录</h1>
+                <p class="header-subtitle">每天进步一点点</p>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.words }}</div>
+                        <div class="stat-label">单词</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.phrases }}</div>
+                        <div class="stat-label">词组</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.sentences }}</div>
+                        <div class="stat-label">句式</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.passages }}</div>
+                        <div class="stat-label">短文</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="input-card">
+                    <div class="type-tabs">
+                        <button class="type-tab" :class="{ active: currentType === 'auto' }" @click="currentType = 'auto'">自动</button>
+                        <button class="type-tab" :class="{ active: currentType === 'words' }" @click="currentType = 'words'">单词</button>
+                        <button class="type-tab" :class="{ active: currentType === 'phrases' }" @click="currentType = 'phrases'">词组</button>
+                        <button class="type-tab" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
+                        <button class="type-tab" :class="{ active: currentType === 'passages' }" @click="currentType = 'passages'">短文</button>
+                    </div>
+                    
+                    <div class="input-area">
+                        <textarea v-if="currentType === 'passages'" 
+                            class="input-field textarea-field" 
+                            v-model="inputContent" 
+                            placeholder="输入英文短文..."></textarea>
+                        <input v-else 
+                            class="input-field" 
+                            v-model="inputContent" 
+                            :placeholder="getPlaceholder()"
+                            @keyup.enter="addRecord"
+                            @input="onInputChange">
+                    </div>
+                    
+                    <input class="input-field translation-field" 
+                        v-model="inputTranslation" 
+                        :placeholder="getTranslationPlaceholder()">
+                    
+                    <div class="hint-text" v-if="currentType === 'auto' && inputContent">
+                        {{ detectType(inputContent) }}<span v-if="detectedTranslation"> · {{ detectedTranslation }}</span>
+                    </div>
+                    
+                    <button class="submit-btn" @click="addRecord" :disabled="isLoading">
+                        <span v-if="isLoading" class="loading"></span>{{ isLoading ? '查询中' : '记录' }}
+                    </button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">今日记录</span>
+                    <span class="section-action" @click="currentPage = 'timeline'">查看全部</span>
+                </div>
+                
+                <div v-if="todayItems.length === 0" class="empty-state">
+                    <div class="empty-icon">✏️</div>
+                    <div class="empty-text">今天还没有记录</div>
+                    <div class="empty-hint">开始添加你的第一个学习笔记</div>
+                </div>
+                
+                <div v-else>
+                    <div class="content-card" v-if="todayItems.words.length > 0">
+                        <div class="category-name">单词</div>
+                        <div class="item-grid">
+                            <span class="item-chip word" v-for="(item, idx) in todayItems.words" :key="'w'+idx" @click="showDetail(item)">
+                                {{ item.text }}
+                                <span v-if="item.pos" class="item-pos">{{ getPosChinese(item.pos) }}</span>
+                                <span class="item-delete" @click.stop="deleteItem('words', idx)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" v-if="todayItems.phrases.length > 0">
+                        <div class="category-name">词组</div>
+                        <div class="item-grid">
+                            <span class="item-chip phrase" v-for="(item, idx) in todayItems.phrases" :key="'p'+idx" @click="showDetail(item)">
+                                {{ item.text }}
+                                <span class="item-delete" @click.stop="deleteItem('phrases', idx)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" v-if="todayItems.sentences.length > 0">
+                        <div class="category-name">句式</div>
+                        <div class="item-grid">
+                            <span class="item-chip sentence" v-for="(item, idx) in todayItems.sentences" :key="'s'+idx" @click="showDetail(item)">
+                                {{ item.text.length > 30 ? item.text.substring(0, 30) + '...' : item.text }}
+                                <span class="item-delete" @click.stop="deleteItem('sentences', idx)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" v-if="todayItems.passages.length > 0">
+                        <div class="category-name">短文</div>
+                        <div class="item-grid">
+                            <span class="item-chip passage" v-for="(item, idx) in todayItems.passages" :key="'pa'+idx" @click="showDetail(item)">
+                                <div class="passage-title">{{ item.text.substring(0, 20) }}...</div>
+                                <span class="item-delete" @click.stop="deleteItem('passages', idx)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" :class="{ active: currentPage === 'timeline' }">
+            <div class="header">
+                <h1 class="header-title">时间轴</h1>
+                <p class="header-subtitle">记录成长的轨迹</p>
+            </div>
+            
+            <div class="search-bar">
+                <input class="search-input" v-model="searchQuery" placeholder="搜索记录...">
+            </div>
+            
+            <div class="filter-row">
+                <span class="filter-chip" :class="{ active: filterType === 'all' }" @click="filterType = 'all'">全部</span>
+                <span class="filter-chip" :class="{ active: filterType === 'words' }" @click="filterType = 'words'">单词</span>
+                <span class="filter-chip" :class="{ active: filterType === 'phrases' }" @click="filterType = 'phrases'">词组</span>
+                <span class="filter-chip" :class="{ active: filterType === 'sentences' }" @click="filterType = 'sentences'">句式</span>
+                <span class="filter-chip" :class="{ active: filterType === 'passages' }" @click="filterType = 'passages'">短文</span>
+            </div>
+            
+            <div class="section">
+                <div v-if="filteredTimeline.length === 0" class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-text">暂无记录</div>
+                    <div class="empty-hint">开始记录你的学习之旅</div>
+                </div>
+                
+                <div v-else>
+                    <div class="content-card" v-for="(group, gIdx) in filteredTimeline" :key="gIdx">
+                        <div class="date-label">{{ group.date }}</div>
+                        
+                        <div class="category-block" v-if="group.words.length > 0">
+                            <div class="category-name">单词</div>
+                            <div class="item-grid">
+                                <span class="item-chip word" v-for="(item, idx) in group.words" :key="'w'+idx" @click="showDetail(item)">
+                                    {{ item.text }}
+                                    <span v-if="item.pos" class="item-pos">{{ getPosChinese(item.pos) }}</span>
+                                    <span class="item-delete" @click.stop="deleteItemByDate(group.date, 'words', idx)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="category-block" v-if="group.phrases.length > 0">
+                            <div class="category-name">词组</div>
+                            <div class="item-grid">
+                                <span class="item-chip phrase" v-for="(item, idx) in group.phrases" :key="'p'+idx" @click="showDetail(item)">
+                                    {{ item.text }}
+                                    <span class="item-delete" @click.stop="deleteItemByDate(group.date, 'phrases', idx)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="category-block" v-if="group.sentences.length > 0">
+                            <div class="category-name">句式</div>
+                            <div class="item-grid">
+                                <span class="item-chip sentence" v-for="(item, idx) in group.sentences" :key="'s'+idx" @click="showDetail(item)">
+                                    {{ item.text.length > 30 ? item.text.substring(0, 30) + '...' : item.text }}
+                                    <span class="item-delete" @click.stop="deleteItemByDate(group.date, 'sentences', idx)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="category-block" v-if="group.passages.length > 0">
+                            <div class="category-name">短文</div>
+                            <div class="item-grid">
+                                <span class="item-chip passage" v-for="(item, idx) in group.passages" :key="'pa'+idx" @click="showDetail(item)">
+                                    <div class="passage-title">{{ item.text.substring(0, 20) }}...</div>
+                                    <span class="item-delete" @click.stop="deleteItemByDate(group.date, 'passages', idx)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" :class="{ active: currentPage === 'recite' }">
+            <div class="header">
+                <h1 class="header-title">背诵模式</h1>
+                <p class="header-subtitle">巩固记忆，温故知新</p>
+            </div>
+            
+            <div class="filter-row">
+                <span class="filter-chip" :class="{ active: reciteFilter === 'all' }" @click="reciteFilter = 'all'">全部</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'words' }" @click="reciteFilter = 'words'">单词</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'phrases' }" @click="reciteFilter = 'phrases'">词组</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'sentences' }" @click="reciteFilter = 'sentences'">句式</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'passages' }" @click="reciteFilter = 'passages'">短文</span>
+            </div>
+            
+            <div class="section">
+                <div v-if="reciteItems.length === 0" class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <div class="empty-text">暂无内容可背诵</div>
+                    <div class="empty-hint">先添加一些学习记录吧</div>
+                </div>
+                
+                <div v-else>
+                    <div class="recite-card">
+                        <div class="recite-item" v-for="(item, idx) in reciteItems" :key="idx">
+                            <button class="recite-toggle" :class="{ show: item.showChinese }" @click="toggleChinese(idx)">
+                                {{ item.showChinese ? '👁' : '👁‍🗨' }}
+                            </button>
+                            <div class="recite-content">
+                                <div class="recite-english">{{ item.text }}</div>
+                                <div class="recite-chinese" :class="{ hidden: !item.showChinese }">{{ item.translation }}</div>
+                            </div>
+                            <span class="recite-badge">{{ getTypeLabel(item.type) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar-actions" v-if="currentPage === 'recite' && reciteItems.length > 0">
+            <button class="action-btn" @click="showAllChinese" title="显示全部">👁</button>
+            <button class="action-btn" @click="hideAllChinese" title="隐藏全部">👁‍🗨</button>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item" :class="{ active: currentPage === 'home' }" @click="currentPage = 'home'">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">首页</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'timeline' }" @click="currentPage = 'timeline'">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">时间轴</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'recite' }" @click="currentPage = 'recite'">
+                <span class="nav-icon">📖</span>
+                <span class="nav-label">背诵</span>
+            </div>
+        </div>
+        
+        <div class="modal-overlay" v-if="showModal" @click.self="showModal = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">详情</span>
+                    <button class="modal-close" @click="showModal = false">×</button>
+                </div>
+                <div class="modal-body">{{ modalContent.text }}</div>
+                <div class="modal-translation" v-if="modalContent.translation">
+                    {{ modalContent.translation }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="toast" v-if="toastMessage">{{ toastMessage }}</div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/element-plus"></script>
+    <script>
+        const { createApp, ref, computed, watch, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                const currentPage = ref('home');
+                const currentType = ref('auto');
+                const inputContent = ref('');
+                const inputTranslation = ref('');
+                const isLoading = ref(false);
+                const detectedTranslation = ref('');
+                const searchQuery = ref('');
+                const filterType = ref('all');
+                const reciteFilter = ref('all');
+                const showModal = ref(false);
+                const modalContent = ref({});
+                const toastMessage = ref('');
+                const showInstallPrompt = ref(false);
+                const installPromptVisible = ref(false);
+                let deferredPrompt = null;
+                
+                const data = ref({
+                    words: [],
+                    phrases: [],
+                    sentences: [],
+                    passages: []
+                });
+                
+                const checkInstallPrompt = () => {
+                    const dismissed = localStorage.getItem('installPromptDismissed');
+                    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                    
+                    if (!dismissed && !isStandalone) {
+                        setTimeout(() => {
+                            showInstallPrompt.value = true;
+                            setTimeout(() => {
+                                installPromptVisible.value = true;
+                            }, 100);
+                        }, 3000);
+                    }
+                };
+                
+                const installApp = async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            showInstallPrompt.value = false;
+                        }
+                        deferredPrompt = null;
+                    } else {
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                        if (isIOS) {
+                            showToast('请点击分享按钮 → 添加到主屏幕');
+                        } else {
+                            showToast('请点击浏览器菜单 → 添加到主屏幕');
+                        }
+                    }
+                    dismissInstall();
+                };
+                
+                const dismissInstall = () => {
+                    installPromptVisible.value = false;
+                    setTimeout(() => {
+                        showInstallPrompt.value = false;
+                    }, 300);
+                    localStorage.setItem('installPromptDismissed', 'true');
+                };
+                
+                const todayDate = computed(() => {
+                    const now = new Date();
+                    const days = ['日', '一', '二', '三', '四', '五', '六'];
+                    return `${now.getMonth() + 1}月${now.getDate()}日 周${days[now.getDay()]}`;
+                });
+                
+                const stats = computed(() => ({
+                    words: data.value.words.length,
+                    phrases: data.value.phrases.length,
+                    sentences: data.value.sentences.length,
+                    passages: data.value.passages.length
+                }));
+                
+                const todayItems = computed(() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    const result = { words: [], phrases: [], sentences: [], passages: [] };
+                    
+                    ['words', 'phrases', 'sentences', 'passages'].forEach(type => {
+                        result[type] = data.value[type].filter(item => {
+                            const itemDate = item.date ? item.date.split('T')[0] : today;
+                            return itemDate === today;
+                        });
+                    });
+                    
+                    return result;
+                });
+                
+                const filteredTimeline = computed(() => {
+                    const grouped = {};
+                    
+                    ['words', 'phrases', 'sentences', 'passages'].forEach(type => {
+                        if (filterType.value !== 'all' && filterType.value !== type) return;
+                        
+                        data.value[type].forEach(item => {
+                            const date = item.date ? item.date.split('T')[0] : new Date().toISOString().split('T')[0];
+                            if (!grouped[date]) {
+                                grouped[date] = { date, words: [], phrases: [], sentences: [], passages: [] };
+                            }
+                            
+                            if (!searchQuery.value || 
+                                item.text.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                                (item.translation && item.translation.includes(searchQuery.value))) {
+                                grouped[date][type].push(item);
+                            }
+                        });
+                    });
+                    
+                    return Object.values(grouped)
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .map(group => {
+                            ['words', 'phrases', 'sentences', 'passages'].forEach(type => {
+                                if (filterType.value !== 'all' && filterType.value !== type) {
+                                    group[type] = [];
+                                }
+                            });
+                            return group;
+                        });
+                });
+                
+                const reciteShowStates = ref({});
+                
+                const reciteItems = computed(() => {
+                    const items = [];
+                    const types = reciteFilter.value === 'all' 
+                        ? ['words', 'phrases', 'sentences', 'passages'] 
+                        : [reciteFilter.value];
+                    
+                    types.forEach(type => {
+                        data.value[type].forEach(item => {
+                            const key = `${type}-${item.text}-${item.date}`;
+                            items.push({
+                                ...item,
+                                type,
+                                key,
+                                showChinese: reciteShowStates.value[key] || false
+                            });
+                        });
+                    });
+                    
+                    return items;
+                });
+                
+                watch(reciteFilter, () => {
+                    reciteShowStates.value = {};
+                });
+                
+                const getPlaceholder = () => {
+                    const placeholders = {
+                        auto: '输入单词、词组或句子...',
+                        words: '输入英文单词',
+                        phrases: '输入英文词组',
+                        sentences: '输入英文句子',
+                        passages: '输入英文短文'
+                    };
+                    return placeholders[currentType.value];
+                };
+                
+                const getTranslationPlaceholder = () => {
+                    const placeholders = {
+                        auto: '中文翻译（可选，自动模式会自动查询）',
+                        words: '中文释义',
+                        phrases: '中文翻译',
+                        sentences: '中文翻译',
+                        passages: '中文翻译或摘要'
+                    };
+                    return placeholders[currentType.value];
+                };
+                
+                const detectType = (text) => {
+                    const wordCount = text.trim().split(/\s+/).length;
+                    if (wordCount === 1) return '单词';
+                    if (wordCount <= 4) return '词组';
+                    return '句子';
+                };
+                
+                const getPosChinese = (pos) => {
+                    const posMap = {
+                        'n': '名词', 'v': '动词', 'adj': '形容词', 'adv': '副词',
+                        'prep': '介词', 'conj': '连词', 'pron': '代词', 'int': '感叹词',
+                        'num': '数词', 'art': '冠词'
+                    };
+                    return posMap[pos] || pos;
+                };
+                
+                const getPosClass = (pos) => {
+                    return pos || '';
+                };
+                
+                const getTypeLabel = (type) => {
+                    const labels = { words: '单词', phrases: '词组', sentences: '句式', passages: '短文' };
+                    return labels[type] || type;
+                };
+                
+                const fetchChineseTranslation = async (text) => {
+                    try {
+                        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh`);
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.responseStatus === 200 && result.responseData) {
+                                return result.responseData.translatedText;
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Chinese translation failed');
+                    }
+                    return null;
+                };
+                
+                const onInputChange = async () => {
+                    if (currentType.value !== 'auto' || !inputContent.value.trim()) {
+                        detectedTranslation.value = '';
+                        return;
+                    }
+                    
+                    const text = inputContent.value.trim();
+                    const wordCount = text.split(/\s+/).length;
+                    
+                    if (wordCount === 1 && /^[a-zA-Z]+$/.test(text)) {
+                        isLoading.value = true;
+                        try {
+                            const [dictResponse, chineseTrans] = await Promise.all([
+                                fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text.toLowerCase()}`),
+                                fetchChineseTranslation(text)
+                            ]);
+                            
+                            let englishDef = '';
+                            if (dictResponse.ok) {
+                                const data = await dictResponse.json();
+                                if (data[0] && data[0].meanings && data[0].meanings[0]) {
+                                    const meaning = data[0].meanings[0];
+                                    if (meaning.definitions && meaning.definitions[0]) {
+                                        englishDef = meaning.definitions[0].definition.substring(0, 50);
+                                    }
+                                }
+                            }
+                            
+                            if (chineseTrans) {
+                                detectedTranslation.value = chineseTrans + (englishDef ? ` (${englishDef})` : '');
+                            } else if (englishDef) {
+                                detectedTranslation.value = englishDef;
+                            }
+                        } catch (e) {
+                            console.log('Translation lookup failed');
+                        }
+                        isLoading.value = false;
+                    } else {
+                        isLoading.value = true;
+                        const chineseTrans = await fetchChineseTranslation(text);
+                        if (chineseTrans) {
+                            detectedTranslation.value = chineseTrans;
+                        }
+                        isLoading.value = false;
+                    }
+                };
+                
+                const addRecord = async () => {
+                    if (!inputContent.value.trim()) {
+                        showToast('请输入内容');
+                        return;
+                    }
+                    
+                    let type = currentType.value;
+                    if (type === 'auto') {
+                        const wordCount = inputContent.value.trim().split(/\s+/).length;
+                        if (wordCount === 1) type = 'words';
+                        else if (wordCount <= 4) type = 'phrases';
+                        else if (wordCount <= 20) type = 'sentences';
+                        else type = 'passages';
+                    }
+                    
+                    const item = {
+                        text: inputContent.value.trim(),
+                        translation: inputTranslation.value.trim() || detectedTranslation.value,
+                        date: new Date().toISOString()
+                    };
+                    
+                    if (!item.translation) {
+                        isLoading.value = true;
+                        try {
+                            if (type === 'words') {
+                                const [dictResponse, chineseTrans] = await Promise.all([
+                                    fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${item.text.toLowerCase()}`),
+                                    fetchChineseTranslation(item.text)
+                                ]);
+                                
+                                let englishDef = '';
+                                if (dictResponse.ok) {
+                                    const data = await dictResponse.json();
+                                    if (data[0] && data[0].meanings && data[0].meanings[0]) {
+                                        const meaning = data[0].meanings[0];
+                                        item.pos = meaning.partOfSpeech;
+                                        if (meaning.definitions && meaning.definitions[0]) {
+                                            englishDef = meaning.definitions[0].definition;
+                                        }
+                                    }
+                                }
+                                
+                                if (chineseTrans) {
+                                    item.translation = chineseTrans + (englishDef ? `\n${englishDef}` : '');
+                                } else if (englishDef) {
+                                    item.translation = englishDef;
+                                }
+                            } else {
+                                const chineseTrans = await fetchChineseTranslation(item.text);
+                                if (chineseTrans) {
+                                    item.translation = chineseTrans;
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Dictionary lookup failed');
+                        }
+                        isLoading.value = false;
+                    }
+                    
+                    data.value[type].unshift(item);
+                    saveData();
+                    
+                    inputContent.value = '';
+                    inputTranslation.value = '';
+                    detectedTranslation.value = '';
+                    
+                    showToast('记录成功');
+                };
+                
+                const deleteItem = (type, index) => {
+                    data.value[type].splice(index, 1);
+                    saveData();
+                    showToast('已删除');
+                };
+                
+                const deleteItemByDate = (date, type, index) => {
+                    const targetDate = date;
+                    let count = 0;
+                    const globalIndex = data.value[type].findIndex(item => {
+                        const itemDate = item.date ? item.date.split('T')[0] : new Date().toISOString().split('T')[0];
+                        if (itemDate === targetDate) {
+                            if (count === index) return true;
+                            count++;
+                        }
+                        return false;
+                    });
+                    
+                    if (globalIndex !== -1) {
+                        data.value[type].splice(globalIndex, 1);
+                        saveData();
+                        showToast('已删除');
+                    }
+                };
+                
+                const showDetail = (item) => {
+                    modalContent.value = item;
+                    showModal.value = true;
+                };
+                
+                const toggleChinese = (index) => {
+                    const item = reciteItems.value[index];
+                    if (item && item.key) {
+                        reciteShowStates.value[item.key] = !reciteShowStates.value[item.key];
+                    }
+                };
+                
+                const showAllChinese = () => {
+                    reciteItems.value.forEach(item => {
+                        if (item && item.key) {
+                            reciteShowStates.value[item.key] = true;
+                        }
+                    });
+                };
+                
+                const hideAllChinese = () => {
+                    reciteItems.value.forEach(item => {
+                        if (item && item.key) {
+                            reciteShowStates.value[item.key] = false;
+                        }
+                    });
+                };
+                
+                const showToast = (message) => {
+                    toastMessage.value = message;
+                    setTimeout(() => {
+                        toastMessage.value = '';
+                    }, 2000);
+                };
+                
+                const saveData = () => {
+                    localStorage.setItem('englishRecords', JSON.stringify(data.value));
+                };
+                
+                const loadData = () => {
+                    const saved = localStorage.getItem('englishRecords');
+                    if (saved) {
+                        data.value = JSON.parse(saved);
+                    }
+                };
+                
+                onMounted(() => {
+                    loadData();
+                    checkInstallPrompt();
+                    
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                    });
+                    
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('recite') === 'true') {
+                        currentPage.value = 'recite';
+                    }
+                });
+                
+                return {
+                    currentPage,
+                    currentType,
+                    inputContent,
+                    inputTranslation,
+                    isLoading,
+                    detectedTranslation,
+                    searchQuery,
+                    filterType,
+                    reciteFilter,
+                    showModal,
+                    modalContent,
+                    toastMessage,
+                    showInstallPrompt,
+                    installPromptVisible,
+                    data,
+                    todayDate,
+                    stats,
+                    todayItems,
+                    filteredTimeline,
+                    reciteItems,
+                    getPlaceholder,
+                    getTranslationPlaceholder,
+                    detectType,
+                    getPosChinese,
+                    getPosClass,
+                    getTypeLabel,
+                    onInputChange,
+                    addRecord,
+                    deleteItem,
+                    deleteItemByDate,
+                    showDetail,
+                    toggleChinese,
+                    showAllChinese,
+                    hideAllChinese,
+                    installApp,
+                    dismissInstall
+                };
+            }
+        }).mount('#app');
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

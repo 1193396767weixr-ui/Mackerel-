@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图标生成器 - 安卓+iOS</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .section h3 { margin-top: 0; color: #2a2a2a; }
+        .icon-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        canvas {
+            border-radius: 20%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .maskable canvas {
+            border-radius: 8px;
+        }
+        .icon-label {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        button {
+            background: #2a2a2a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        button:hover { background: #1a1a1a; transform: translateY(-1px); }
+        button.secondary { background: #666; }
+        button.secondary:hover { background: #555; }
+        .instructions {
+            background: #fff8e6;
+            border-left: 4px solid #f5a623;
+        }
+        .instructions ol { line-height: 2; margin: 10px 0; padding-left: 20px; }
+        .instructions code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #666;
+        }
+        .tab.active {
+            background: #2a2a2a;
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <h1>英语每日记录 - 图标生成器</h1>
+    <p class="subtitle">支持 Android 和 iOS 设备</p>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('standard')">标准图标</button>
+        <button class="tab" onclick="showTab('maskable')">安卓自适应图标</button>
+    </div>
+    
+    <div id="standard" class="tab-content active">
+        <div class="section">
+            <h3>标准图标 (iOS + Android)</h3>
+            <div class="icon-preview" id="preview-standard"></div>
+        </div>
+    </div>
+    
+    <div id="maskable" class="tab-content">
+        <div class="section">
+            <h3>自适应图标 (Android 8.0+)</h3>
+            <p style="color: #666; font-size: 14px;">安卓自适应图标有安全区域，确保图标内容在中心80%区域内</p>
+            <div class="icon-preview maskable" id="preview-maskable"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <button onclick="downloadAll()">下载全部图标</button>
+        <button class="secondary" onclick="downloadStandard()">仅下载标准图标</button>
+        <button class="secondary" onclick="downloadMaskable()">仅下载自适应图标</button>
+    </div>
+    
+    <div class="section instructions">
+        <h3>使用说明</h3>
+        <ol>
+            <li>点击"下载全部图标"按钮，所有图标将自动下载</li>
+            <li>将下载的图标文件放入项目的 <code>icons</code> 文件夹</li>
+            <li>确保文件名正确：
+                <ul>
+                    <li>标准图标：icon-72.png, icon-96.png, icon-128.png 等</li>
+                    <li>自适应图标：maskable-192.png, maskable-512.png</li>
+                </ul>
+            </li>
+            <li><strong>Android用户</strong>：在Chrome中打开应用 → 点击菜单 → "添加到主屏幕"</li>
+            <li><strong>iOS用户</strong>：在Safari中打开应用 → 分享 → "添加到主屏幕"</li>
+        </ol>
+    </div>
+
+    <script>
+        const standardSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const maskableSizes = [192, 512];
+        
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function drawStandardIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 512;
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#f8f6f3');
+            gradient.addColorStop(1, '#e8e6e3');
+            
+            ctx.beginPath();
+            const radius = size * 0.2;
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.fillStyle = '#2a2a2a';
+            ctx.font = `${Math.round(120 * scale)}px Georgia, serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('EN', size / 2, size * 0.32);
+            
+            ctx.beginPath();
+            ctx.moveTo(size * 0.2, size * 0.5);
+            ctx.lineTo(size * 0.8, size * 0.5);
+            ctx.strokeStyle = '#2a2a2a';
+            ctx.lineWidth = Math.max(2, 3 * scale);
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            ctx.font = `${Math.round(100 * scale)}px Georgia, serif`;
+            ctx.fillText('英', size / 2, size * 0.7);
+            
+            ctx.fillStyle = '#888';
+            ctx.font = `${Math.round(36 * scale)}px -apple-system, sans-serif`;
+            ctx.fillText('每日记录', size / 2, size * 0.88);
+        }
+        
+        function drawMaskableIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 512;
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#f8f6f3');
+            gradient.addColorStop(1, '#e8e6e3');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            const safeZone = size * 0.8;
+            const offsetX = (size - safeZone) / 2;
+            const offsetY = (size - safeZone) / 2;
+            
+            ctx.fillStyle = '#2a2a2a';
+            ctx.font = `bold ${Math.round(100 * scale)}px Georgia, serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.fillText('EN', size / 2, offsetY + safeZone * 0.35);
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX + safeZone * 0.1, offsetY + safeZone * 0.5);
+            ctx.lineTo(offsetX + safeZone * 0.9, offsetY + safeZone * 0.5);
+            ctx.strokeStyle = '#2a2a2a';
+            ctx.lineWidth = Math.max(3, 5 * scale);
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            ctx.font = `bold ${Math.round(90 * scale)}px Georgia, serif`;
+            ctx.fillText('英', size / 2, offsetY + safeZone * 0.72);
+        }
+        
+        function createPreviews() {
+            const standardPreview = document.getElementById('preview-standard');
+            const maskablePreview = document.getElementById('preview-maskable');
+            
+            standardSizes.forEach(size => {
+                const div = document.createElement('div');
+                div.className = 'icon-item';
+                
+                const canvas = document.createElement('canvas');
+                drawStandardIcon(canvas, size);
+                
+                const label = document.createElement('div');
+                label.className = 'icon-label';
+                label.textContent = `icon-${size}.png`;
+                
+                div.appendChild(canvas);
+                div.appendChild(label);
+                standardPreview.appendChild(div);
+            });
+            
+            maskableSizes.forEach(size => {
+                const div = document.createElement('div');
+                div.className = 'icon-item';
+                
+                const canvas = document.createElement('canvas');
+                drawMaskableIcon(canvas, size);
+                
+                const label = document.createElement('div');
+                label.className = 'icon-label';
+                label.textContent = `maskable-${size}.png`;
+                
+                div.appendChild(canvas);
+                div.appendChild(label);
+                maskablePreview.appendChild(div);
+            });
+        }
+        
+        function downloadIcon(filename, drawFunc, size) {
+            const canvas = document.createElement('canvas');
+            drawFunc(canvas, size);
+            
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function downloadStandard() {
+            standardSizes.forEach(size => {
+                downloadIcon(`icon-${size}.png`, drawStandardIcon, size);
+            });
+        }
+        
+        function downloadMaskable() {
+            maskableSizes.forEach(size => {
+                downloadIcon(`maskable-${size}.png`, drawMaskableIcon, size);
+            });
+        }
+        
+        function downloadAll() {
+            downloadStandard();
+            setTimeout(() => downloadMaskable(), 500);
+        }
+        
+        createPreviews();
+    </script>
+</body>
+</html>
