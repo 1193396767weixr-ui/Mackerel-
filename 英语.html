@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#409EFF">
+    <title>英语每日记录</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: -15px -15px 20px -15px;
+            color: white;
+            border-radius: 0 0 20px 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .stat-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #909399;
+            margin-bottom: 5px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .stat-card.words .value { color: #409EFF; }
+        .stat-card.phrases .value { color: #67C23A; }
+        .stat-card.sentences .value { color: #E6A23C; }
+        
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .input-section .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .type-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 15px;
+            border: 2px solid #dcdfe6;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #606266;
+        }
+        .type-btn.active {
+            border-color: #409EFF;
+            background: #ecf5ff;
+            color: #409EFF;
+        }
+        .type-btn.active.phrases { border-color: #67C23A; background: #f0f9eb; color: #67C23A; }
+        .type-btn.active.sentences { border-color: #E6A23C; background: #fdf6ec; color: #E6A23C; }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        .main-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #dcdfe6;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .main-input:focus {
+            border-color: #409EFF;
+        }
+        .submit-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .submit-btn:active {
+            transform: scale(0.95);
+        }
+        .auto-detect-hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #909399;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #606266;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #409EFF;
+            color: white;
+        }
+        
+        .search-bar {
+            margin-bottom: 15px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .history-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .date-group {
+            margin-bottom: 20px;
+        }
+        .date-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ebeef5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-section {
+            margin-bottom: 12px;
+        }
+        .category-title {
+            font-size: 13px;
+            color: #909399;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .item-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .item-tag.words { background: #ecf5ff; color: #409EFF; }
+        .item-tag.phrases { background: #f0f9eb; color: #67C23A; }
+        .item-tag.sentences { 
+            background: #fdf6ec; 
+            color: #E6A23C; 
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+        .item-tag .delete-btn {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .item-tag:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .total-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .total-category {
+            margin-bottom: 20px;
+        }
+        .total-category:last-child {
+            margin-bottom: 0;
+        }
+        .total-category-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+        .total-category-title.words { color: #409EFF; border-color: #409EFF; }
+        .total-category-title.phrases { color: #67C23A; border-color: #67C23A; }
+        .total-category-title.sentences { color: #E6A23C; border-color: #E6A23C; }
+        
+        .toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .toolbar-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .toolbar-btn.export { background: #ecf5ff; color: #409EFF; }
+        .toolbar-btn.import { background: #f0f9eb; color: #67C23A; }
+        .toolbar-btn.clear { background: #fef0f0; color: #F56C6C; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #909399;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .stat-row {
+                flex-wrap: wrap;
+            }
+            .stat-card {
+                min-width: calc(50% - 5px);
+            }
+            .stat-card:last-child {
+                min-width: 100%;
+            }
+            .input-wrapper {
+                flex-direction: column;
+            }
+            .submit-btn {
+                width: 100%;
+            }
+        }
+        
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <div class="header">
+                <h1>英语每日记录</h1>
+                <p>每天进步一点点</p>
+            </div>
+            
+            <div class="stat-row">
+                <div class="stat-card words">
+                    <div class="label">累计单词</div>
+                    <div class="value">{{ totals.words }}</div>
+                </div>
+                <div class="stat-card phrases">
+                    <div class="label">累计词组</div>
+                    <div class="value">{{ totals.phrases }}</div>
+                </div>
+                <div class="stat-card sentences">
+                    <div class="label">累计句式</div>
+                    <div class="value">{{ totals.sentences }}</div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <div class="section-title">录入新知识</div>
+                <div class="type-selector">
+                    <button class="type-btn" :class="{ active: currentType === 'auto' }" @click="currentType = 'auto'">自动识别</button>
+                    <button class="type-btn words" :class="{ active: currentType === 'words' }" @click="currentType = 'words'">单词</button>
+                    <button class="type-btn phrases" :class="{ active: currentType === 'phrases' }" @click="currentType = 'phrases'">词组</button>
+                    <button class="type-btn sentences" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
+                </div>
+                <div class="input-wrapper">
+                    <input 
+                        class="main-input" 
+                        v-model="inputContent" 
+                        placeholder="输入单词、词组或句式..."
+                        @keyup.enter="addRecord"
+                        ref="mainInput">
+                    <button class="submit-btn" @click="addRecord">保存</button>
+                </div>
+                <div class="auto-detect-hint" v-if="currentType === 'auto' && inputContent">
+                    将识别为: {{ detectType(inputContent) }}
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab" :class="{ active: activeTab === 'timeline' }" @click="activeTab = 'timeline'">时间线</div>
+                <div class="tab" :class="{ active: activeTab === 'total' }" @click="activeTab = 'total'">全部积累</div>
+            </div>
+            
+            <div class="search-bar" v-show="activeTab === 'timeline'">
+                <input class="search-input" v-model="searchKeyword" placeholder="搜索记录...">
+            </div>
+            
+            <div class="history-section" v-show="activeTab === 'timeline'">
+                <div v-if="filteredDates.length === 0" class="empty-state">
+                    <div class="icon">📝</div>
+                    <div>暂无记录</div>
+                    <div style="font-size: 12px; margin-top: 5px;">开始添加你的第一个学习笔记吧</div>
+                </div>
+                <div v-else>
+                    <div class="date-group" v-for="date in filteredDates" :key="date">
+                        <div class="date-header">📅 {{ date }}</div>
+                        
+                        <div class="category-section" v-if="getFilteredItems(date, 'words').length > 0">
+                            <div class="category-title">单词</div>
+                            <div class="item-list">
+                                <span class="item-tag words" v-for="(item, index) in getFilteredItems(date, 'words')" :key="'w'+index">
+                                    {{ item }}
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'words', index)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="category-section" v-if="getFilteredItems(date, 'phrases').length > 0">
+                            <div class="category-title">词组</div>
+                            <div class="item-list">
+                                <span class="item-tag phrases" v-for="(item, index) in getFilteredItems(date, 'phrases')" :key="'p'+index">
+                                    {{ item }}
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'phrases', index)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="category-section" v-if="getFilteredItems(date, 'sentences').length > 0">
+                            <div class="category-title">句式</div>
+                            <div class="item-list">
+                                <span class="item-tag sentences" v-for="(item, index) in getFilteredItems(date, 'sentences')" :key="'s'+index">
+                                    {{ item }}
+                                    <span class="delete-btn" @click.stop="deleteItem(date, 'sentences', index)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="total-section" v-show="activeTab === 'total'">
+                <div class="total-category" v-if="allItems.words.length > 0">
+                    <div class="total-category-title words">全部单词 ({{ allItems.words.length }})</div>
+                    <div class="item-list">
+                        <span class="item-tag words" v-for="(item, index) in allItems.words" :key="'tw'+index">{{ item }}</span>
+                    </div>
+                </div>
+                
+                <div class="total-category" v-if="allItems.phrases.length > 0">
+                    <div class="total-category-title phrases">全部词组 ({{ allItems.phrases.length }})</div>
+                    <div class="item-list">
+                        <span class="item-tag phrases" v-for="(item, index) in allItems.phrases" :key="'tp'+index">{{ item }}</span>
+                    </div>
+                </div>
+                
+                <div class="total-category" v-if="allItems.sentences.length > 0">
+                    <div class="total-category-title sentences">全部句式 ({{ allItems.sentences.length }})</div>
+                    <div class="item-list" style="flex-direction: column;">
+                        <span class="item-tag sentences" v-for="(item, index) in allItems.sentences" :key="'ts'+index">{{ item }}</span>
+                    </div>
+                </div>
+                
+                <div v-if="allItems.words.length === 0 && allItems.phrases.length === 0 && allItems.sentences.length === 0" class="empty-state">
+                    <div class="icon">📚</div>
+                    <div>暂无积累</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <button class="toolbar-btn export" @click="exportData">导出数据</button>
+            <button class="toolbar-btn import" @click="triggerImport">导入数据</button>
+            <button class="toolbar-btn clear" @click="confirmClear">清空数据</button>
+        </div>
+        
+        <input type="file" ref="fileInput" @change="importData" accept=".json" style="display: none;">
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/element-plus"></script>
+    
+    <script>
+        const { createApp, ref, computed, watch, onMounted } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
+
+        createApp({
+            setup() {
+                const currentType = ref('auto');
+                const inputContent = ref('');
+                const records = ref({});
+                const activeTab = ref('timeline');
+                const searchKeyword = ref('');
+                const mainInput = ref(null);
+                const fileInput = ref(null);
+
+                onMounted(() => {
+                    const savedData = localStorage.getItem('english_daily_records');
+                    if (savedData) {
+                        try {
+                            records.value = JSON.parse(savedData);
+                        } catch (e) {
+                            console.error("加载数据失败", e);
+                        }
+                    }
+                });
+
+                watch(records, (newVal) => {
+                    localStorage.setItem('english_daily_records', JSON.stringify(newVal));
+                }, { deep: true });
+
+                const totals = computed(() => {
+                    let w = 0, p = 0, s = 0;
+                    for (const date in records.value) {
+                        w += records.value[date].words?.length || 0;
+                        p += records.value[date].phrases?.length || 0;
+                        s += records.value[date].sentences?.length || 0;
+                    }
+                    return { words: w, phrases: p, sentences: s };
+                });
+
+                const allItems = computed(() => {
+                    const words = [];
+                    const phrases = [];
+                    const sentences = [];
+                    const dates = Object.keys(records.value).sort((a, b) => new Date(b) - new Date(a));
+                    dates.forEach(date => {
+                        words.push(...(records.value[date].words || []));
+                        phrases.push(...(records.value[date].phrases || []));
+                        sentences.push(...(records.value[date].sentences || []));
+                    });
+                    return { words, phrases, sentences };
+                });
+
+                const filteredDates = computed(() => {
+                    const dates = Object.keys(records.value).sort((a, b) => new Date(b) - new Date(a));
+                    if (!searchKeyword.value.trim()) return dates;
+                    
+                    const keyword = searchKeyword.value.toLowerCase();
+                    return dates.filter(date => {
+                        const data = records.value[date];
+                        const allText = [
+                            ...(data.words || []),
+                            ...(data.phrases || []),
+                            ...(data.sentences || [])
+                        ].join(' ').toLowerCase();
+                        return allText.includes(keyword);
+                    });
+                });
+
+                const detectType = (text) => {
+                    const trimmed = text.trim();
+                    const wordCount = trimmed.split(/\s+/).length;
+                    const hasPunctuation = /[.!?。！？]/.test(trimmed);
+                    
+                    if (hasPunctuation || wordCount > 6) {
+                        return '句式';
+                    } else if (wordCount <= 2) {
+                        return '单词';
+                    } else {
+                        return '词组';
+                    }
+                };
+
+                const getAutoType = (text) => {
+                    const trimmed = text.trim();
+                    const wordCount = trimmed.split(/\s+/).length;
+                    const hasPunctuation = /[.!?。！？]/.test(trimmed);
+                    
+                    if (hasPunctuation || wordCount > 6) {
+                        return 'sentences';
+                    } else if (wordCount <= 2) {
+                        return 'words';
+                    } else {
+                        return 'phrases';
+                    }
+                };
+
+                const getTodayDate = () => {
+                    const now = new Date();
+                    return `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+                };
+
+                const addRecord = () => {
+                    const text = inputContent.value.trim();
+                    if (!text) {
+                        ElMessage.warning('请输入学习内容');
+                        return;
+                    }
+
+                    const today = getTodayDate();
+                    if (!records.value[today]) {
+                        records.value[today] = { words: [], phrases: [], sentences: [] };
+                    }
+
+                    const type = currentType.value === 'auto' ? getAutoType(text) : currentType.value;
+                    records.value[today][type].push(text);
+                    
+                    ElMessage.success('记录成功！');
+                    inputContent.value = '';
+                };
+
+                const getFilteredItems = (date, type) => {
+                    const items = records.value[date]?.[type] || [];
+                    if (!searchKeyword.value.trim()) return items;
+                    const keyword = searchKeyword.value.toLowerCase();
+                    return items.filter(item => item.toLowerCase().includes(keyword));
+                };
+
+                const deleteItem = (date, type, index) => {
+                    ElMessageBox.confirm('确定删除这条记录吗？', '提示', {
+                        confirmButtonText: '删除',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        records.value[date][type].splice(index, 1);
+                        if (records.value[date].words.length === 0 && 
+                            records.value[date].phrases.length === 0 && 
+                            records.value[date].sentences.length === 0) {
+                            delete records.value[date];
+                        }
+                        ElMessage.success('删除成功');
+                    }).catch(() => {});
+                };
+
+                const exportData = () => {
+                    const dataStr = JSON.stringify(records.value, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `英语记录_${getTodayDate().replace(/\//g, '-')}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    ElMessage.success('导出成功');
+                };
+
+                const triggerImport = () => {
+                    fileInput.value.click();
+                };
+
+                const importData = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            const merged = { ...records.value };
+                            
+                            for (const date in imported) {
+                                if (!merged[date]) {
+                                    merged[date] = { words: [], phrases: [], sentences: [] };
+                                }
+                                merged[date].words = [...new Set([...merged[date].words, ...(imported[date].words || [])])];
+                                merged[date].phrases = [...new Set([...merged[date].phrases, ...(imported[date].phrases || [])])];
+                                merged[date].sentences = [...new Set([...merged[date].sentences, ...(imported[date].sentences || [])])];
+                            }
+                            
+                            records.value = merged;
+                            ElMessage.success('导入成功');
+                        } catch (err) {
+                            ElMessage.error('导入失败，文件格式错误');
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                };
+
+                const confirmClear = () => {
+                    ElMessageBox.confirm('确定清空所有数据吗？此操作不可恢复！', '警告', {
+                        confirmButtonText: '清空',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        records.value = {};
+                        ElMessage.success('已清空');
+                    }).catch(() => {});
+                };
+
+                return {
+                    currentType,
+                    inputContent,
+                    records,
+                    activeTab,
+                    searchKeyword,
+                    totals,
+                    allItems,
+                    filteredDates,
+                    mainInput,
+                    fileInput,
+                    detectType,
+                    addRecord,
+                    getFilteredItems,
+                    deleteItem,
+                    exportData,
+                    triggerImport,
+                    importData,
+                    confirmClear
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

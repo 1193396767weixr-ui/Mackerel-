@@ -1,0 +1,303 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import os
+from datetime import datetime, timedelta
+
+app = Flask(__name__)
+CORS(app)
+
+app.config['JWT_SECRET_KEY'] = 'english-tracker-secret-key-2026'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
+jwt = JWTManager(app)
+
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'english_tracker.db')
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            type TEXT NOT NULL,
+            content TEXT NOT NULL,
+            pos TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+with app.app_context():
+    init_db()
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    
+    if not username or not password:
+        return jsonify({'error': '用户名和密码不能为空'}), 400
+    
+    if len(username) < 3:
+        return jsonify({'error': '用户名至少3个字符'}), 400
+    
+    if len(password) < 6:
+        return jsonify({'error': '密码至少6个字符'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    try:
+        password_hash = generate_password_hash(password)
+        cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', 
+                      (username, password_hash))
+        conn.commit()
+        user_id = cursor.lastrowid
+        
+        access_token = create_access_token(identity=str(user_id))
+        return jsonify({
+            'message': '注册成功',
+            'access_token': access_token,
+            'user': {'id': user_id, 'username': username}
+        }), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': '用户名已存在'}), 400
+    finally:
+        conn.close()
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    
+    if not username or not password:
+        return jsonify({'error': '用户名和密码不能为空'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if not user or not check_password_hash(user['password_hash'], password):
+        return jsonify({'error': '用户名或密码错误'}), 401
+    
+    access_token = create_access_token(identity=str(user['id']))
+    return jsonify({
+        'message': '登录成功',
+        'access_token': access_token,
+        'user': {'id': user['id'], 'username': user['username']}
+    })
+
+@app.route('/api/records', methods=['GET'])
+@jwt_required()
+def get_records():
+    user_id = int(get_jwt_identity())
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, date, type, content, pos, created_at 
+        FROM records 
+        WHERE user_id = ? 
+        ORDER BY date DESC, created_at DESC
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    records = {}
+    for row in rows:
+        date = row['date']
+        if date not in records:
+            records[date] = {'words': [], 'phrases': [], 'sentences': []}
+        
+        item = {
+            'id': row['id'],
+            'text': row['content'],
+            'pos': row['pos']
+        }
+        records[date][row['type']].append(item)
+    
+    return jsonify(records)
+
+@app.route('/api/records', methods=['POST'])
+@jwt_required()
+def add_record():
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    
+    content = data.get('content', '').strip()
+    record_type = data.get('type', 'words')
+    pos = data.get('pos', None)
+    
+    if not content:
+        return jsonify({'error': '内容不能为空'}), 400
+    
+    if record_type not in ['words', 'phrases', 'sentences']:
+        return jsonify({'error': '无效的类型'}), 400
+    
+    today = datetime.now().strftime('%Y/%m/%d')
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO records (user_id, date, type, content, pos) 
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, today, record_type, content, pos))
+    conn.commit()
+    record_id = cursor.lastrowid
+    conn.close()
+    
+    return jsonify({
+        'message': '添加成功',
+        'record': {
+            'id': record_id,
+            'date': today,
+            'type': record_type,
+            'text': content,
+            'pos': pos
+        }
+    }), 201
+
+@app.route('/api/records/<int:record_id>', methods=['DELETE'])
+@jwt_required()
+def delete_record(record_id):
+    user_id = int(get_jwt_identity())
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM records WHERE id = ? AND user_id = ?', (record_id, user_id))
+    conn.commit()
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        return jsonify({'error': '记录不存在或无权删除'}), 404
+    
+    conn.close()
+    return jsonify({'message': '删除成功'})
+
+@app.route('/api/records/export', methods=['GET'])
+@jwt_required()
+def export_records():
+    user_id = int(get_jwt_identity())
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, date, type, content, pos, created_at 
+        FROM records 
+        WHERE user_id = ? 
+        ORDER BY date DESC, created_at DESC
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    records = {}
+    for row in rows:
+        date = row['date']
+        if date not in records:
+            records[date] = {'words': [], 'phrases': [], 'sentences': []}
+        
+        item = {
+            'id': row['id'],
+            'text': row['content'],
+            'pos': row['pos']
+        }
+        records[date][row['type']].append(item)
+    
+    return jsonify(records)
+
+@app.route('/api/records/import', methods=['POST'])
+@jwt_required()
+def import_records():
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    
+    imported_records = data.get('records', {})
+    count = 0
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    for date, items in imported_records.items():
+        for record_type in ['words', 'phrases', 'sentences']:
+            for item in items.get(record_type, []):
+                text = item.get('text', item) if isinstance(item, dict) else item
+                pos = item.get('pos', None) if isinstance(item, dict) else None
+                
+                cursor.execute('''
+                    SELECT id FROM records 
+                    WHERE user_id = ? AND date = ? AND type = ? AND content = ?
+                ''', (user_id, date, record_type, text))
+                
+                if not cursor.fetchone():
+                    cursor.execute('''
+                        INSERT INTO records (user_id, date, type, content, pos) 
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (user_id, date, record_type, text, pos))
+                    count += 1
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': f'成功导入 {count} 条记录'})
+
+@app.route('/api/user/info', methods=['GET'])
+@jwt_required()
+def get_user_info():
+    user_id = int(get_jwt_identity())
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, username, created_at FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    
+    cursor.execute('''
+        SELECT 
+            SUM(CASE WHEN type = 'words' THEN 1 ELSE 0 END) as words,
+            SUM(CASE WHEN type = 'phrases' THEN 1 ELSE 0 END) as phrases,
+            SUM(CASE WHEN type = 'sentences' THEN 1 ELSE 0 END) as sentences
+        FROM records WHERE user_id = ?
+    ''', (user_id,))
+    stats = cursor.fetchone()
+    conn.close()
+    
+    return jsonify({
+        'user': {
+            'id': user['id'],
+            'username': user['username'],
+            'created_at': user['created_at']
+        },
+        'stats': {
+            'words': stats['words'] or 0,
+            'phrases': stats['phrases'] or 0,
+            'sentences': stats['sentences'] or 0
+        }
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
