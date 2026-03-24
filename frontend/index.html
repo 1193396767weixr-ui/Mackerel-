@@ -9,24 +9,225 @@
     <title>英语每日记录</title>
     <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&display=swap');
         
-        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-card { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .login-title { text-align: center; margin-bottom: 30px; }
-        .login-title h1 { margin: 0; color: #667eea; font-size: 28px; }
-        .login-title p { margin: 10px 0 0; color: #909399; font-size: 14px; }
-        .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; }
-        .login-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; color: #909399; transition: all 0.3s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .login-tab.active { color: #667eea; border-bottom-color: #667eea; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #606266; font-size: 14px; }
-        .form-input { width: 100%; padding: 12px 15px; border: 2px solid #dcdfe6; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; outline: none; }
-        .form-input:focus { border-color: #667eea; }
-        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
-        .login-btn:active { transform: scale(0.98); }
-        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        html, body { 
+            font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif; 
+            min-height: 100vh; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #3d3d3d;
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            animation: cardIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes cardIn {
+            from { opacity: 0; transform: scale(0.95) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .login-title {
+            font-size: 28px;
+            font-weight: 400;
+            color: #2a2a2a;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .login-subtitle {
+            font-size: 14px;
+            color: #909399;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        .login-tabs {
+            display: flex;
+            background: #f5f3f0;
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+        
+        .login-tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            color: #909399;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 15px;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        
+        .login-tab.active {
+            background: #fff;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #606266;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #ebe8e5;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            outline: none;
+            background: #faf9f7;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-input:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #c0c0c0;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 3px;
+            font-weight: 400;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .offline-hint {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #f0ede8;
+        }
+        
+        .offline-hint p {
+            font-size: 13px;
+            color: #909399;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .offline-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #f5f3f0;
+            color: #666;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        
+        .offline-btn:hover {
+            background: #ebe8e4;
+            color: #333;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
         .app-container { max-width: 900px; margin: 0 auto; padding: 15px; padding-bottom: 80px; }
         .header { text-align: center; padding: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: -15px -15px 20px -15px; color: white; border-radius: 0 0 20px 20px; }
@@ -116,16 +317,14 @@
         .empty-state { text-align: center; padding: 40px 20px; color: #909399; }
         .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
         
-        .loading-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #f3f3f3; border-top: 2px solid #409EFF; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; z-index: 1000; animation: fadeIn 0.3s; }
         .toast.success { background: #67C23A; }
         .toast.error { background: #F56C6C; }
         .toast.warning { background: #E6A23C; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         
         @media (max-width: 600px) {
+            .login-card { padding: 36px 28px; }
+            .login-title { font-size: 24px; }
             .stat-row { flex-wrap: wrap; }
             .stat-card { min-width: calc(50% - 5px); }
             .stat-card:last-child { min-width: 100%; }
@@ -136,17 +335,18 @@
 </head>
 <body>
     <div id="app">
-        <div v-if="!isInitialized" class="login-container">
+        <div v-if="!isInitialized" class="login-page">
             <div class="login-card" style="text-align: center;">
-                <div class="loading-spinner" style="width: 40px; height: 40px; margin: 20px auto;"></div>
-                <p style="color: #909399;">加载中...</p>
+                <div class="loading-spinner" style="width: 40px; height: 40px; border-color: rgba(102,126,234,0.3); border-top-color: #667eea; margin: 20px auto;"></div>
+                <p style="color: #909399; letter-spacing: 1px;">加载中...</p>
             </div>
         </div>
-        <div class="login-container" v-else-if="!isLoggedIn">
+        <div class="login-page" v-else-if="!isLoggedIn">
             <div class="login-card">
-                <div class="login-title">
-                    <h1>英语每日记录</h1>
-                    <p>每天进步一点点</p>
+                <div class="login-header">
+                    <div class="login-icon">📚</div>
+                    <h1 class="login-title">英语每日记录</h1>
+                    <p class="login-subtitle">每天进步一点点</p>
                 </div>
                 <div class="login-tabs">
                     <div class="login-tab" :class="{ active: loginMode === 'login' }" @click="loginMode = 'login'">登录</div>
@@ -154,18 +354,22 @@
                 </div>
                 <form @submit.prevent="handleAuth">
                     <div class="form-group">
-                        <label>用户名</label>
+                        <label class="form-label">用户名</label>
                         <input class="form-input" v-model="username" placeholder="请输入用户名" required minlength="3">
                     </div>
                     <div class="form-group">
-                        <label>密码</label>
+                        <label class="form-label">密码</label>
                         <input class="form-input" type="password" v-model="password" placeholder="请输入密码" required minlength="6">
                     </div>
                     <button class="login-btn" type="submit" :disabled="isLoading">
                         <span v-if="isLoading" class="loading-spinner"></span>
-                        {{ loginMode === 'login' ? '登录' : '注册' }}
+                        {{ loginMode === 'login' ? '登 录' : '注 册' }}
                     </button>
                 </form>
+                <div class="offline-hint">
+                    <p>无法连接服务器？</p>
+                    <button class="offline-btn" @click="useOfflineMode">使用离线模式</button>
+                </div>
             </div>
         </div>
         
@@ -370,6 +574,7 @@
                 const posCache = ref({});
                 const toast = ref({ show: false, message: '', type: 'success' });
                 const fileInput = ref(null);
+                const isOfflineMode = ref(false);
 
                 const showToast = (message, type = 'success') => {
                     toast.value = { show: true, message, type };
@@ -380,6 +585,25 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token.value}`
                 });
+
+                const useOfflineMode = () => {
+                    isOfflineMode.value = true;
+                    isLoggedIn.value = true;
+                    isInitialized.value = true;
+                    userInfo.value = { username: '本地用户' };
+                    const savedRecords = localStorage.getItem('offline_english_records');
+                    if (savedRecords) {
+                        try {
+                            records.value = JSON.parse(savedRecords);
+                            updateStats();
+                        } catch (e) {}
+                    }
+                    showToast('已进入离线模式，数据保存在本地');
+                };
+
+                const saveOfflineData = () => {
+                    localStorage.setItem('offline_english_records', JSON.stringify(records.value));
+                };
 
                 const checkAuth = async () => {
                     if (!token.value) {
@@ -641,6 +865,26 @@
                         }
                     }
                     
+                    const today = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/');
+                    
+                    if (isOfflineMode.value) {
+                        if (!records.value[today]) {
+                            records.value[today] = { words: [], phrases: [], sentences: [] };
+                        }
+                        const newItem = {
+                            id: Date.now(),
+                            text: text,
+                            pos: pos
+                        };
+                        records.value[today][type].push(newItem);
+                        updateStats();
+                        saveOfflineData();
+                        showToast('记录成功！');
+                        inputContent.value = '';
+                        detectedPos.value = [];
+                        return;
+                    }
+                    
                     try {
                         const res = await fetch(`${API_BASE}/records`, {
                             method: 'POST',
@@ -673,6 +917,20 @@
 
                 const deleteItem = async (date, type, id) => {
                     if (!confirm('确定删除这条记录吗？')) return;
+                    
+                    if (isOfflineMode.value) {
+                        records.value[date][type] = records.value[date][type].filter(i => i.id !== id);
+                        if (records.value[date].words.length === 0 && 
+                            records.value[date].phrases.length === 0 && 
+                            records.value[date].sentences.length === 0) {
+                            delete records.value[date];
+                        }
+                        updateStats();
+                        saveOfflineData();
+                        showToast('删除成功');
+                        return;
+                    }
+                    
                     try {
                         const res = await fetch(`${API_BASE}/records/${id}`, {
                             method: 'DELETE',
@@ -694,15 +952,13 @@
                 };
 
                 const exportData = async () => {
-                    try {
-                        const res = await fetch(`${API_BASE}/records/export`, { headers: getHeaders() });
-                        const data = await res.json();
-                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `英语记录_${new Date().toISOString().split('T')[0]}.json`;
-                        a.click();
+                    const data = isOfflineMode.value ? records.value : await (await fetch(`${API_BASE}/records/export`, { headers: getHeaders() })).json();
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `英语记录_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
                         URL.revokeObjectURL(url);
                         showToast('导出成功');
                     } catch (e) {
@@ -750,11 +1006,11 @@
                 return {
                     isLoggedIn, isInitialized, loginMode, username, password, userInfo, records, stats,
                     currentType, inputContent, activeTab, searchKeyword, detectedPos,
-                    isLoading, posFilter, isShuffled, toast, fileInput, allItems,
+                    isLoading, posFilter, isShuffled, toast, fileInput, allItems, isOfflineMode,
                     filteredWords, displayWords, shuffledWords, shuffledPhrases, shuffledSentences,
                     groupedDisplayWords, filteredDates, handleAuth, logout, getPosChinese, getPosClass,
                     onInputChange, detectType, addRecord, getFilteredItems, deleteItem,
-                    exportData, triggerImport, importData, toggleShuffle, showToast
+                    exportData, triggerImport, importData, toggleShuffle, showToast, useOfflineMode
                 };
             }
         }).mount('#app');
