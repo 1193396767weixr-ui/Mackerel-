@@ -392,6 +392,14 @@
         .filter-chip:hover:not(.active) {
             border-color: #ccc;
         }
+        .filter-chip.order-chip {
+            margin-left: auto;
+            background: #f5f3f0;
+        }
+        .filter-chip.order-chip.active {
+            background: #4a90a4;
+            border-color: #4a90a4;
+        }
         
         .recite-card {
             background: #fff;
@@ -1272,6 +1280,9 @@
                 <span class="filter-chip" :class="{ active: reciteFilter === 'phrases' }" @click="reciteFilter = 'phrases'">词组</span>
                 <span class="filter-chip" :class="{ active: reciteFilter === 'sentences' }" @click="reciteFilter = 'sentences'">句式</span>
                 <span class="filter-chip" :class="{ active: reciteFilter === 'passages' }" @click="reciteFilter = 'passages'">短文</span>
+                <span class="filter-chip order-chip" :class="{ active: isReciteShuffled }" @click="toggleReciteShuffle">
+                    {{ isReciteShuffled ? '🔀 乱序' : '📋 顺序' }}
+                </span>
             </div>
             
             <div class="section">
@@ -1730,8 +1741,17 @@
                 });
                 
                 const reciteShowStates = ref({});
+                const isReciteShuffled = ref(false);
+                const shuffledReciteItems = ref([]);
                 
                 const reciteItems = computed(() => {
+                    if (isReciteShuffled.value && shuffledReciteItems.value.length > 0) {
+                        return shuffledReciteItems.value.map(item => ({
+                            ...item,
+                            showChinese: reciteShowStates.value[item.key] || false
+                        }));
+                    }
+                    
                     const items = [];
                     const types = reciteFilter.value === 'all' 
                         ? ['words', 'phrases', 'sentences', 'passages'] 
@@ -1754,7 +1774,47 @@
                 
                 watch(reciteFilter, () => {
                     reciteShowStates.value = {};
+                    if (isReciteShuffled.value) {
+                        shuffledReciteItems.value = shuffleReciteArray(getBaseReciteItems());
+                    }
                 });
+                
+                const shuffleReciteArray = (arr) => {
+                    const newArr = [...arr];
+                    for (let i = newArr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+                    }
+                    return newArr;
+                };
+                
+                const getBaseReciteItems = () => {
+                    const items = [];
+                    const types = reciteFilter.value === 'all' 
+                        ? ['words', 'phrases', 'sentences', 'passages'] 
+                        : [reciteFilter.value];
+                    
+                    types.forEach(type => {
+                        data.value[type].forEach(item => {
+                            const key = `${type}-${item.text}-${item.date}`;
+                            items.push({
+                                ...item,
+                                type,
+                                key,
+                                showChinese: reciteShowStates.value[key] || false
+                            });
+                        });
+                    });
+                    
+                    return items;
+                };
+                
+                const toggleReciteShuffle = () => {
+                    isReciteShuffled.value = !isReciteShuffled.value;
+                    if (isReciteShuffled.value) {
+                        shuffledReciteItems.value = shuffleReciteArray(getBaseReciteItems());
+                    }
+                };
                 
                 const getPlaceholder = () => {
                     const placeholders = {
@@ -2055,6 +2115,8 @@
                     hasTodayItems,
                     filteredTimeline,
                     reciteItems,
+                    isReciteShuffled,
+                    toggleReciteShuffle,
                     getPlaceholder,
                     getTranslationPlaceholder,
                     detectType,
