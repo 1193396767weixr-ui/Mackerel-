@@ -312,3 +312,5 @@ def init_db_route():
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'message': '服务正常运行'})
+
+handler = app
