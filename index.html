@@ -476,6 +476,207 @@
             letter-spacing: 0.5px;
         }
         
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+        }
+        .auth-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 28px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+        .auth-title {
+            font-size: 24px;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 3px;
+        }
+        .auth-subtitle {
+            font-size: 13px;
+            color: #b0b0b0;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 28px;
+            border-bottom: 1px solid #f0ede8;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-size: 14px;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        .auth-tab.active {
+            color: #2a2a2a;
+            border-bottom-color: #2a2a2a;
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid #ebe8e5;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #faf9f7;
+            margin-bottom: 14px;
+        }
+        .auth-input:focus {
+            border-color: #2a2a2a;
+            background: #fff;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: #2a2a2a;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+        .auth-btn:hover {
+            background: #1a1a1a;
+        }
+        .auth-btn:disabled {
+            background: #d0d0d0;
+            cursor: not-allowed;
+        }
+        .auth-error {
+            color: #ff6b6b;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .auth-hint {
+            font-size: 12px;
+            color: #b0b0b0;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .profile-header {
+            padding: 48px 28px 36px;
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #f5f3f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 16px;
+        }
+        .profile-name {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+        .profile-date {
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 0 24px;
+            margin-bottom: 28px;
+        }
+        .profile-stat {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 12px;
+            text-align: center;
+        }
+        .profile-stat-num {
+            font-size: 28px;
+            font-weight: 300;
+            color: #2a2a2a;
+            margin-bottom: 6px;
+        }
+        .profile-stat-label {
+            font-size: 11px;
+            color: #b0b0b0;
+            letter-spacing: 1px;
+        }
+        .profile-menu {
+            padding: 0 24px;
+        }
+        .profile-menu-item {
+            background: #fff;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .profile-menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .profile-menu-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .profile-menu-icon {
+            font-size: 20px;
+        }
+        .profile-menu-text {
+            font-size: 14px;
+            color: #3d3d3d;
+        }
+        .profile-menu-arrow {
+            color: #c0c0c0;
+            font-size: 18px;
+        }
+        .sync-status {
+            font-size: 12px;
+            color: #b0b0b0;
+            text-align: center;
+            padding: 16px;
+        }
+        .sync-status.syncing {
+            color: #4a7cb5;
+        }
+        .sync-status.success {
+            color: #3a8c5a;
+        }
+        .sync-status.error {
+            color: #ff6b6b;
+        }
+        
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -831,6 +1032,38 @@
             </div>
         </div>
         
+        <div class="auth-page" v-if="!isLoggedIn">
+            <div class="auth-card">
+                <h1 class="auth-title">英语每日记录</h1>
+                <p class="auth-subtitle">登录后可多设备同步数据</p>
+                
+                <div class="auth-tabs">
+                    <div class="auth-tab" :class="{ active: authMode === 'login' }" @click="authMode = 'login'">登录</div>
+                    <div class="auth-tab" :class="{ active: authMode === 'register' }" @click="authMode = 'register'">注册</div>
+                </div>
+                
+                <div class="auth-form" :class="{ active: authMode === 'login' }">
+                    <input type="text" class="auth-input" v-model="loginForm.username" placeholder="用户名">
+                    <input type="password" class="auth-input" v-model="loginForm.password" placeholder="密码">
+                    <button class="auth-btn" @click="handleLogin" :disabled="authLoading">{{ authLoading ? '登录中...' : '登录' }}</button>
+                    <p class="auth-error" v-if="authError">{{ authError }}</p>
+                </div>
+                
+                <div class="auth-form" :class="{ active: authMode === 'register' }">
+                    <input type="text" class="auth-input" v-model="registerForm.username" placeholder="用户名（至少3个字符）">
+                    <input type="password" class="auth-input" v-model="registerForm.password" placeholder="密码（至少6个字符）">
+                    <input type="password" class="auth-input" v-model="registerForm.confirmPassword" placeholder="确认密码">
+                    <button class="auth-btn" @click="handleRegister" :disabled="authLoading">{{ authLoading ? '注册中...' : '注册' }}</button>
+                    <p class="auth-error" v-if="authError">{{ authError }}</p>
+                </div>
+                
+                <p class="auth-hint">不登录也可使用，数据仅保存在本地</p>
+                <button class="auth-btn" style="background: #f5f3f0; color: #666; margin-top: 12px;" @click="skipLogin">先看看</button>
+            </div>
+        </div>
+        
+        <template v-else>
+        
         <div class="page" :class="{ active: currentPage === 'home' }">
             <div class="header">
                 <div class="header-date">{{ todayDate }}</div>
@@ -1083,7 +1316,84 @@
                 <span class="nav-icon">📖</span>
                 <span class="nav-label">背诵</span>
             </div>
+            <div class="nav-item" :class="{ active: currentPage === 'profile' }" @click="currentPage = 'profile'">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
+            </div>
         </div>
+        
+        <div class="page" :class="{ active: currentPage === 'profile' }">
+            <div class="profile-header">
+                <div class="profile-avatar">{{ currentUser.username ? currentUser.username[0].toUpperCase() : '👤' }}</div>
+                <div class="profile-name">{{ currentUser.username || '游客' }}</div>
+                <div class="profile-date" v-if="currentUser.created_at">加入于 {{ currentUser.created_at }}</div>
+                <div class="profile-date" v-else>数据仅保存在本地</div>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="profile-stat-num">{{ cloudStats.words }}</div>
+                    <div class="profile-stat-label">单词</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-num">{{ cloudStats.phrases }}</div>
+                    <div class="profile-stat-label">词组</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-num">{{ cloudStats.sentences }}</div>
+                    <div class="profile-stat-label">句子</div>
+                </div>
+            </div>
+            
+            <div class="sync-status" :class="syncStatusClass">{{ syncStatus }}</div>
+            
+            <div class="profile-menu">
+                <div class="profile-menu-item" @click="syncToCloud" v-if="currentUser.username">
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">☁️</span>
+                        <span class="profile-menu-text">同步到云端</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+                <div class="profile-menu-item" @click="syncFromCloud" v-if="currentUser.username">
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">📥</span>
+                        <span class="profile-menu-text">从云端恢复</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+                <div class="profile-menu-item" @click="exportData">
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">📤</span>
+                        <span class="profile-menu-text">导出数据</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+                <div class="profile-menu-item" @click="importData">
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">📥</span>
+                        <span class="profile-menu-text">导入数据</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+                <div class="profile-menu-item" @click="handleLogout" v-if="currentUser.username">
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">🚪</span>
+                        <span class="profile-menu-text">退出登录</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+                <div class="profile-menu-item" @click="showLoginAgain" v-else>
+                    <div class="profile-menu-left">
+                        <span class="profile-menu-icon">🔐</span>
+                        <span class="profile-menu-text">登录账号</span>
+                    </div>
+                    <span class="profile-menu-arrow">›</span>
+                </div>
+            </div>
+        </div>
+        
+        </template>
         
         <div class="modal-overlay" v-if="showModal" @click.self="showModal = false">
             <div class="modal-content">
@@ -1106,6 +1416,8 @@
     <script>
         const { createApp, ref, computed, watch, onMounted } = Vue;
         
+        const API_BASE = window.location.origin;
+        
         createApp({
             setup() {
                 const currentPage = ref('home');
@@ -1123,6 +1435,182 @@
                 const showInstallPrompt = ref(false);
                 const installPromptVisible = ref(false);
                 let deferredPrompt = null;
+                
+                const isLoggedIn = ref(true);
+                const authMode = ref('login');
+                const authLoading = ref(false);
+                const authError = ref('');
+                const loginForm = ref({ username: '', password: '' });
+                const registerForm = ref({ username: '', password: '', confirmPassword: '' });
+                const currentUser = ref({ id: null, username: '', created_at: '' });
+                const cloudStats = ref({ words: 0, phrases: 0, sentences: 0 });
+                const syncStatus = ref('');
+                const syncStatusClass = ref('');
+                
+                const getAuthHeaders = () => {
+                    const token = localStorage.getItem('access_token');
+                    return token ? { 'Authorization': `Bearer ${token}` } : {};
+                };
+                
+                const handleLogin = async () => {
+                    authLoading.value = true;
+                    authError.value = '';
+                    try {
+                        const res = await fetch(`${API_BASE}/api/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(loginForm.value)
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || '登录失败');
+                        localStorage.setItem('access_token', result.access_token);
+                        currentUser.value = result.user;
+                        isLoggedIn.value = true;
+                        showToast('登录成功');
+                        await loadCloudData();
+                    } catch (e) {
+                        authError.value = e.message;
+                    } finally {
+                        authLoading.value = false;
+                    }
+                };
+                
+                const handleRegister = async () => {
+                    if (registerForm.value.password !== registerForm.value.confirmPassword) {
+                        authError.value = '两次密码不一致';
+                        return;
+                    }
+                    authLoading.value = true;
+                    authError.value = '';
+                    try {
+                        const res = await fetch(`${API_BASE}/api/register`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: registerForm.value.username,
+                                password: registerForm.value.password
+                            })
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || '注册失败');
+                        localStorage.setItem('access_token', result.access_token);
+                        currentUser.value = result.user;
+                        isLoggedIn.value = true;
+                        showToast('注册成功');
+                    } catch (e) {
+                        authError.value = e.message;
+                    } finally {
+                        authLoading.value = false;
+                    }
+                };
+                
+                const skipLogin = () => {
+                    isLoggedIn.value = true;
+                    localStorage.setItem('skip_login', 'true');
+                };
+                
+                const handleLogout = () => {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('skip_login');
+                    currentUser.value = { id: null, username: '', created_at: '' };
+                    isLoggedIn.value = false;
+                    authMode.value = 'login';
+                    loginForm.value = { username: '', password: '' };
+                    showToast('已退出登录');
+                };
+                
+                const showLoginAgain = () => {
+                    isLoggedIn.value = false;
+                };
+                
+                const loadCloudData = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/api/user/info`, {
+                            headers: getAuthHeaders()
+                        });
+                        if (res.ok) {
+                            const result = await res.json();
+                            currentUser.value = result.user;
+                            cloudStats.value = result.stats;
+                        }
+                    } catch (e) {
+                        console.error('Load cloud data failed:', e);
+                    }
+                };
+                
+                const syncToCloud = async () => {
+                    syncStatus.value = '正在同步...';
+                    syncStatusClass.value = 'syncing';
+                    try {
+                        const res = await fetch(`${API_BASE}/api/records/import`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                ...getAuthHeaders()
+                            },
+                            body: JSON.stringify({ records: data.value })
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error);
+                        syncStatus.value = result.message;
+                        syncStatusClass.value = 'success';
+                        await loadCloudData();
+                    } catch (e) {
+                        syncStatus.value = '同步失败: ' + e.message;
+                        syncStatusClass.value = 'error';
+                    }
+                };
+                
+                const syncFromCloud = async () => {
+                    syncStatus.value = '正在恢复...';
+                    syncStatusClass.value = 'syncing';
+                    try {
+                        const res = await fetch(`${API_BASE}/api/records/export`, {
+                            headers: getAuthHeaders()
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error);
+                        data.value = result;
+                        saveData();
+                        syncStatus.value = '恢复成功';
+                        syncStatusClass.value = 'success';
+                        showToast('数据已从云端恢复');
+                    } catch (e) {
+                        syncStatus.value = '恢复失败: ' + e.message;
+                        syncStatusClass.value = 'error';
+                    }
+                };
+                
+                const exportData = () => {
+                    const blob = new Blob([JSON.stringify(data.value, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `english_records_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('数据已导出');
+                };
+                
+                const importData = () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        try {
+                            const text = await file.text();
+                            const imported = JSON.parse(text);
+                            data.value = { ...data.value, ...imported };
+                            saveData();
+                            showToast('数据已导入');
+                        } catch (e) {
+                            showToast('导入失败：文件格式错误');
+                        }
+                    };
+                    input.click();
+                };
                 
                 const data = ref({
                     words: [],
@@ -1507,9 +1995,22 @@
                     }
                 };
                 
-                onMounted(() => {
+                onMounted(async () => {
                     loadData();
                     checkInstallPrompt();
+                    
+                    const token = localStorage.getItem('access_token');
+                    const skipLogin = localStorage.getItem('skip_login');
+                    
+                    if (token) {
+                        try {
+                            await loadCloudData();
+                        } catch (e) {
+                            console.error('Failed to load cloud data:', e);
+                        }
+                    } else if (!skipLogin) {
+                        isLoggedIn.value = false;
+                    }
                     
                     window.addEventListener('beforeinstallprompt', (e) => {
                         e.preventDefault();
@@ -1558,7 +2059,26 @@
                     showAllChinese,
                     hideAllChinese,
                     installApp,
-                    dismissInstall
+                    dismissInstall,
+                    isLoggedIn,
+                    authMode,
+                    authLoading,
+                    authError,
+                    loginForm,
+                    registerForm,
+                    currentUser,
+                    cloudStats,
+                    syncStatus,
+                    syncStatusClass,
+                    handleLogin,
+                    handleRegister,
+                    skipLogin,
+                    handleLogout,
+                    showLoginAgain,
+                    syncToCloud,
+                    syncFromCloud,
+                    exportData,
+                    importData
                 };
             }
         }).mount('#app');
