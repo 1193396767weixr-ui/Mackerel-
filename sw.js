@@ -1,4 +1,4 @@
-const CACHE_NAME = 'english-daily-v2';
+const CACHE_NAME = 'english-daily-v1';
 const urlsToCache = [
     '/',
     '/index.html',
