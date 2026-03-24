@@ -2078,7 +2078,7 @@
                         } catch (e) {
                             console.error('Failed to load cloud data:', e);
                         }
-                    } else if (!skipLogin) {
+                    } else if (!skipLogin || window.location.hostname !== 'localhost') {
                         isLoggedIn.value = false;
                     }
                     
