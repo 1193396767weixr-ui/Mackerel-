@@ -309,14 +309,33 @@ def init_db_route():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+db_initialized = False
+db_init_error = None
+
+@app.before_request
+def initialize_database():
+    global db_initialized, db_init_error
+    if not db_initialized and db_init_error is None:
+        try:
+            init_db()
+            db_initialized = True
+            print('数据库初始化成功')
+        except Exception as e:
+            db_init_error = str(e)
+            print(f'数据库初始化失败: {e}')
+
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok', 'message': '服务正常运行'})
-
-try:
-    init_db()
-    print('数据库初始化成功')
-except Exception as e:
-    print(f'数据库初始化失败: {e}')
+    if db_init_error:
+        return jsonify({
+            'status': 'error',
+            'message': '数据库初始化失败',
+            'error': db_init_error
+        }), 500
+    return jsonify({
+        'status': 'ok',
+        'message': '服务正常运行',
+        'db_initialized': db_initialized
+    })
 
 handler = app
