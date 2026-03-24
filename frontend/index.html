@@ -318,9 +318,36 @@
         .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
         
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; z-index: 1000; animation: fadeIn 0.3s; }
-        .toast.success { background: #67C23A; }
-        .toast.error { background: #F56C6C; }
-        .toast.warning { background: #E6A23C; }
+.toast.success { background: #67C23A; }
+.toast.error { background: #F56C6C; }
+.toast.warning { background: #E6A23C; }
+        
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.2s; }
+.modal-content { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; animation: cardIn 0.3s; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #ebeef5; }
+.modal-title { font-size: 20px; font-weight: 600; color: #303133; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f5f7fa; cursor: pointer; font-size: 18px; color: #909399; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: #ebeef5; color: #606266; }
+.modal-body { }
+.definition-section { margin-bottom: 16px; }
+.definition-title { font-size: 14px; font-weight: 600; color: #606266; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.definition-title.en::before { content: '🇬🇧'; }
+.definition-title.zh::before { content: '🇨🇳'; }
+.definition-list { background: #f5f7fa; border-radius: 8px; padding: 12px; }
+.definition-item { font-size: 14px; color: #303133; padding: 6px 0; border-bottom: 1px dashed #e4e7ed; }
+.definition-item:last-child { border-bottom: none; }
+.definition-item .pos { color: #409EFF; font-weight: 500; margin-right: 6px; }
+.no-definition { color: #909399; font-size: 13px; text-align: center; padding: 12px; }
+.edit-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #ebeef5; }
+.edit-title { font-size: 14px; font-weight: 600; color: #606266; margin-bottom: 12px; }
+.edit-textarea { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #dcdfe6; border-radius: 8px; font-size: 14px; resize: vertical; font-family: inherit; }
+.edit-textarea:focus { outline: none; border-color: #409EFF; }
+.edit-actions { display: flex; gap: 10px; margin-top: 12px; }
+.edit-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.edit-btn.save { background: #409EFF; color: white; }
+.edit-btn.cancel { background: #f5f7fa; color: #606266; }
+.loading-inline { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.loading-inline.dark { border-color: rgba(0,0,0,0.1); border-top-color: #409EFF; }
         
         @media (max-width: 600px) {
             .login-card { padding: 36px 28px; }
@@ -454,7 +481,7 @@
                         <div class="category-section" v-if="getFilteredItems(date, 'words').length > 0">
                             <div class="category-title">单词</div>
                             <div class="item-list">
-                                <span class="item-tag words" v-for="item in getFilteredItems(date, 'words')" :key="item.id">
+                                <span class="item-tag words" v-for="item in getFilteredItems(date, 'words')" :key="item.id" @click="openDetailModal(item, date, 'words')">
                                     <span class="word-content">
                                         {{ item.text }}
                                         <span v-if="item.pos" class="word-pos">{{ getPosChinese(item.pos) }}</span>
@@ -466,7 +493,7 @@
                         <div class="category-section" v-if="getFilteredItems(date, 'phrases').length > 0">
                             <div class="category-title">词组</div>
                             <div class="item-list">
-                                <span class="item-tag phrases" v-for="item in getFilteredItems(date, 'phrases')" :key="item.id">
+                                <span class="item-tag phrases" v-for="item in getFilteredItems(date, 'phrases')" :key="item.id" @click="openDetailModal(item, date, 'phrases')">
                                     {{ item.text }}
                                     <span class="delete-btn" @click.stop="deleteItem(date, 'phrases', item.id)">×</span>
                                 </span>
@@ -475,7 +502,7 @@
                         <div class="category-section" v-if="getFilteredItems(date, 'sentences').length > 0">
                             <div class="category-title">句式</div>
                             <div class="item-list">
-                                <span class="item-tag sentences" v-for="item in getFilteredItems(date, 'sentences')" :key="item.id">
+                                <span class="item-tag sentences" v-for="item in getFilteredItems(date, 'sentences')" :key="item.id" @click="openDetailModal(item, date, 'sentences')">
                                     {{ item.text }}
                                     <span class="delete-btn" @click.stop="deleteItem(date, 'sentences', item.id)">×</span>
                                 </span>
@@ -495,7 +522,7 @@
                                 ({{ posGroup.items.length }})
                             </div>
                             <div class="item-list">
-                                <span class="item-tag words" v-for="item in posGroup.items" :key="item.id">{{ item.text }}</span>
+                                <span class="item-tag words" v-for="item in posGroup.items" :key="item.id" @click="openDetailModal(item, null, 'words')">{{ item.text }}</span>
                             </div>
                         </div>
                     </div>
@@ -527,6 +554,57 @@
         <input type="file" ref="fileInput" @change="importData" accept=".json" style="display: none;">
         
         <div class="toast" v-if="toast.show" :class="toast.type">{{ toast.message }}</div>
+        
+        <div class="modal-overlay" v-if="showDetailModal" @click.self="closeDetailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">{{ detailItem?.text }}</div>
+                    <button class="modal-close" @click="closeDetailModal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div v-if="isLoadingDetail" style="text-align: center; padding: 30px;">
+                        <span class="loading-inline dark"></span>
+                        <p style="color: #909399; margin-top: 10px;">正在查询释义...</p>
+                    </div>
+                    <template v-else>
+                        <div class="definition-section" v-if="detailDefinitions.en?.length">
+                            <div class="definition-title en">英文释义</div>
+                            <div class="definition-list">
+                                <div class="definition-item" v-for="(def, idx) in detailDefinitions.en" :key="'en'+idx">{{ def }}</div>
+                            </div>
+                        </div>
+                        <div class="definition-section" v-if="detailDefinitions.zh?.length">
+                            <div class="definition-title zh">中文释义</div>
+                            <div class="definition-list">
+                                <div class="definition-item" v-for="(def, idx) in detailDefinitions.zh" :key="'zh'+idx">{{ def }}</div>
+                            </div>
+                        </div>
+                        <div class="no-definition" v-if="!detailDefinitions.en?.length && !detailDefinitions.zh?.length">
+                            暂无释义，可手动添加
+                        </div>
+                        
+                        <div class="edit-section">
+                            <div class="edit-title">✏️ 自定义释义</div>
+                            <div style="margin-bottom: 10px;">
+                                <label style="font-size: 12px; color: #909399;">英文释义</label>
+                                <textarea class="edit-textarea" v-model="editDefinitionEn" placeholder="输入自定义英文释义..."></textarea>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #909399;">中文释义</label>
+                                <textarea class="edit-textarea" v-model="editDefinitionZh" placeholder="输入自定义中文释义..."></textarea>
+                            </div>
+                            <div class="edit-actions">
+                                <button class="edit-btn cancel" @click="closeDetailModal">取消</button>
+                                <button class="edit-btn save" @click="saveDefinition" :disabled="isSavingDefinition">
+                                    <span v-if="isSavingDefinition" class="loading-inline"></span>
+                                    {{ isSavingDefinition ? '保存中' : '保存' }}
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -575,6 +653,16 @@
                 const toast = ref({ show: false, message: '', type: 'success' });
                 const fileInput = ref(null);
                 const isOfflineMode = ref(false);
+                
+                const showDetailModal = ref(false);
+                const detailItem = ref(null);
+                const detailItemDate = ref(null);
+                const detailItemType = ref(null);
+                const isLoadingDetail = ref(false);
+                const detailDefinitions = ref({ en: null, zh: null });
+                const editDefinitionEn = ref('');
+                const editDefinitionZh = ref('');
+                const isSavingDefinition = ref(false);
 
                 const showToast = (message, type = 'success') => {
                     toast.value = { show: true, message, type };
@@ -951,6 +1039,102 @@
                     }
                 };
 
+                const openDetailModal = async (item, date, type) => {
+                    detailItem.value = item;
+                    detailItemDate.value = date;
+                    detailItemType.value = type;
+                    showDetailModal.value = true;
+                    isLoadingDetail.value = true;
+                    detailDefinitions.value = { en: null, zh: null };
+                    editDefinitionEn.value = item.definition_en || '';
+                    editDefinitionZh.value = item.definition_zh || '';
+                    
+                    if (item.definition_en || item.definition_zh) {
+                        detailDefinitions.value = {
+                            en: item.definition_en ? item.definition_en.split('\n').filter(Boolean) : null,
+                            zh: item.definition_zh ? item.definition_zh.split('\n').filter(Boolean) : null
+                        };
+                        isLoadingDetail.value = false;
+                        return;
+                    }
+                    
+                    try {
+                        const res = await fetch(`${API_BASE}/dictionary/${encodeURIComponent(item.text)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            detailDefinitions.value = {
+                                en: data.definitions_en,
+                                zh: data.definitions_zh
+                            };
+                            editDefinitionEn.value = data.definitions_en ? data.definitions_en.join('\n') : '';
+                            editDefinitionZh.value = data.definitions_zh ? data.definitions_zh.join('\n') : '';
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch definitions:', e);
+                    }
+                    isLoadingDetail.value = false;
+                };
+
+                const closeDetailModal = () => {
+                    showDetailModal.value = false;
+                    detailItem.value = null;
+                    detailDefinitions.value = { en: null, zh: null };
+                    editDefinitionEn.value = '';
+                    editDefinitionZh.value = '';
+                };
+
+                const saveDefinition = async () => {
+                    if (!detailItem.value) return;
+                    
+                    isSavingDefinition.value = true;
+                    const defEn = editDefinitionEn.value.trim();
+                    const defZh = editDefinitionZh.value.trim();
+                    
+                    if (isOfflineMode.value) {
+                        if (detailItemDate.value) {
+                            const items = records.value[detailItemDate.value]?.[detailItemType.value];
+                            const item = items?.find(i => i.id === detailItem.value.id);
+                            if (item) {
+                                item.definition_en = defEn || null;
+                                item.definition_zh = defZh || null;
+                            }
+                        }
+                        saveOfflineData();
+                        showToast('保存成功');
+                        isSavingDefinition.value = false;
+                        closeDetailModal();
+                        return;
+                    }
+                    
+                    try {
+                        const res = await fetch(`${API_BASE}/records/${detailItem.value.id}`, {
+                            method: 'PUT',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                definition_en: defEn || null,
+                                definition_zh: defZh || null
+                            })
+                        });
+                        if (res.ok) {
+                            if (detailItemDate.value) {
+                                const items = records.value[detailItemDate.value]?.[detailItemType.value];
+                                const item = items?.find(i => i.id === detailItem.value.id);
+                                if (item) {
+                                    item.definition_en = defEn || null;
+                                    item.definition_zh = defZh || null;
+                                }
+                            }
+                            showToast('保存成功');
+                            closeDetailModal();
+                        } else {
+                            showToast('保存失败', 'error');
+                        }
+                    } catch (e) {
+                        showToast('保存失败', 'error');
+                    }
+                    isSavingDefinition.value = false;
+                };
+
                 const exportData = async () => {
                     const data = isOfflineMode.value ? records.value : await (await fetch(`${API_BASE}/records/export`, { headers: getHeaders() })).json();
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1010,7 +1194,10 @@
                     filteredWords, displayWords, shuffledWords, shuffledPhrases, shuffledSentences,
                     groupedDisplayWords, filteredDates, handleAuth, logout, getPosChinese, getPosClass,
                     onInputChange, detectType, addRecord, getFilteredItems, deleteItem,
-                    exportData, triggerImport, importData, toggleShuffle, showToast, useOfflineMode
+                    exportData, triggerImport, importData, toggleShuffle, showToast, useOfflineMode,
+                    showDetailModal, detailItem, isLoadingDetail, detailDefinitions, 
+                    editDefinitionEn, editDefinitionZh, isSavingDefinition,
+                    openDetailModal, closeDetailModal, saveDefinition
                 };
             }
         }).mount('#app');

@@ -4,6 +4,10 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
+import urllib.request
+import urllib.parse
+import json
+import re
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -41,6 +45,8 @@ def init_db():
             type TEXT NOT NULL,
             content TEXT NOT NULL,
             pos TEXT,
+            definition_en TEXT,
+            definition_zh TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -121,7 +127,7 @@ def get_records():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, date, type, content, pos, created_at 
+        SELECT id, date, type, content, pos, definition_en, definition_zh, created_at 
         FROM records 
         WHERE user_id = ? 
         ORDER BY date DESC, created_at DESC
@@ -138,7 +144,9 @@ def get_records():
         item = {
             'id': row['id'],
             'text': row['content'],
-            'pos': row['pos']
+            'pos': row['pos'],
+            'definition_en': row['definition_en'],
+            'definition_zh': row['definition_zh']
         }
         records[date][row['type']].append(item)
     
@@ -153,6 +161,8 @@ def add_record():
     content = data.get('content', '').strip()
     record_type = data.get('type', 'words')
     pos = data.get('pos', None)
+    definition_en = data.get('definition_en', None)
+    definition_zh = data.get('definition_zh', None)
     
     if not content:
         return jsonify({'error': '内容不能为空'}), 400
@@ -165,9 +175,9 @@ def add_record():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO records (user_id, date, type, content, pos) 
-        VALUES (?, ?, ?, ?, ?)
-    ''', (user_id, today, record_type, content, pos))
+        INSERT INTO records (user_id, date, type, content, pos, definition_en, definition_zh) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (user_id, today, record_type, content, pos, definition_en, definition_zh))
     conn.commit()
     record_id = cursor.lastrowid
     conn.close()
@@ -179,9 +189,45 @@ def add_record():
             'date': today,
             'type': record_type,
             'text': content,
-            'pos': pos
+            'pos': pos,
+            'definition_en': definition_en,
+            'definition_zh': definition_zh
         }
     }), 201
+
+@app.route('/api/records/<int:record_id>', methods=['PUT'])
+@jwt_required()
+def update_record(record_id):
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM records WHERE id = ? AND user_id = ?', (record_id, user_id))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'error': '记录不存在或无权修改'}), 404
+    
+    update_fields = []
+    update_values = []
+    
+    if 'pos' in data:
+        update_fields.append('pos = ?')
+        update_values.append(data['pos'])
+    if 'definition_en' in data:
+        update_fields.append('definition_en = ?')
+        update_values.append(data['definition_en'])
+    if 'definition_zh' in data:
+        update_fields.append('definition_zh = ?')
+        update_values.append(data['definition_zh'])
+    
+    if update_fields:
+        update_values.append(record_id)
+        cursor.execute(f"UPDATE records SET {', '.join(update_fields)} WHERE id = ?", update_values)
+        conn.commit()
+    
+    conn.close()
+    return jsonify({'message': '更新成功'})
 
 @app.route('/api/records/<int:record_id>', methods=['DELETE'])
 @jwt_required()
@@ -200,6 +246,127 @@ def delete_record(record_id):
     conn.close()
     return jsonify({'message': '删除成功'})
 
+def fetch_english_definition(word):
+    try:
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{urllib.parse.quote(word)}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+        
+        if isinstance(data, list) and len(data) > 0:
+            definitions = []
+            for entry in data:
+                if entry.get('meanings'):
+                    for meaning in entry['meanings']:
+                        pos = meaning.get('partOfSpeech', '')
+                        for defn in meaning.get('definitions', [])[:2]:
+                            definition_text = defn.get('definition', '')
+                            example = defn.get('example', '')
+                            if definition_text:
+                                text = f"[{pos}] {definition_text}"
+                                if example:
+                                    text += f" (e.g., {example})"
+                                definitions.append(text)
+            return definitions[:4] if definitions else None
+    except Exception as e:
+        print(f"English definition error: {e}")
+    return None
+
+def fetch_chinese_definition(word):
+    try:
+        url = f"http://dict-co.iciba.com/api/dictionary.php?w={urllib.parse.quote(word)}&key=00000000000000000000000000000&type=json"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+        
+        definitions = []
+        if data.get('word_name'):
+            if data.get('symbols') and len(data['symbols']) > 0:
+                symbol = data['symbols'][0]
+                if symbol.get('parts'):
+                    for part in symbol['parts'][:4]:
+                        pos = part.get('part', '')
+                        means = part.get('means', [])
+                        if isinstance(means, list):
+                            mean_text = '; '.join([m if isinstance(m, str) else m.get('word_mean', '') for m in means[:3]])
+                        else:
+                            mean_text = str(means)
+                        if pos:
+                            definitions.append(f"[{pos}] {mean_text}")
+                        else:
+                            definitions.append(mean_text)
+        return definitions if definitions else None
+    except Exception as e:
+        print(f"Chinese definition error: {e}")
+    
+    try:
+        url = f"https://api.mojidict.com/parse/functions/union-search-v2"
+        data = json.dumps({
+            "text": word,
+            "types": ["102", "103", "104", "106", "403"],
+            "isNeedCn": True
+        }).encode('utf-8')
+        req = urllib.request.Request(url, data=data, headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0'
+        })
+        with urllib.request.urlopen(req, timeout=5) as response:
+            result = json.loads(response.read().decode('utf-8'))
+        
+        definitions = []
+        if result.get('result') and result['result'].get('result'):
+            for item in result['result']['result'][:4]:
+                if item.get('title'):
+                    definitions.append(item['title'])
+                elif item.get('excerpt'):
+                    definitions.append(item['excerpt'])
+        return definitions if definitions else None
+    except Exception as e:
+        print(f"Moji dict error: {e}")
+    
+    return None
+
+@app.route('/api/dictionary/<word>', methods=['GET'])
+def lookup_word(word):
+    word = word.strip().lower()
+    if not word:
+        return jsonify({'error': '单词不能为空'}), 400
+    
+    result = {
+        'word': word,
+        'definitions_en': None,
+        'definitions_zh': None,
+        'pos': []
+    }
+    
+    en_defs = fetch_english_definition(word)
+    if en_defs:
+        result['definitions_en'] = en_defs
+    
+    zh_defs = fetch_chinese_definition(word)
+    if zh_defs:
+        result['definitions_zh'] = zh_defs
+    
+    try:
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{urllib.parse.quote(word)}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+        
+        pos_set = set()
+        if isinstance(data, list):
+            for entry in data:
+                if entry.get('meanings'):
+                    for meaning in entry['meanings']:
+                        pos = meaning.get('partOfSpeech', '').lower()
+                        if pos:
+                            pos_set.add(pos)
+        result['pos'] = list(pos_set)
+    except:
+        pass
+    
+    return jsonify(result)
+
 @app.route('/api/records/export', methods=['GET'])
 @jwt_required()
 def export_records():
@@ -208,7 +375,7 @@ def export_records():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, date, type, content, pos, created_at 
+        SELECT id, date, type, content, pos, definition_en, definition_zh, created_at 
         FROM records 
         WHERE user_id = ? 
         ORDER BY date DESC, created_at DESC
@@ -225,7 +392,9 @@ def export_records():
         item = {
             'id': row['id'],
             'text': row['content'],
-            'pos': row['pos']
+            'pos': row['pos'],
+            'definition_en': row['definition_en'],
+            'definition_zh': row['definition_zh']
         }
         records[date][row['type']].append(item)
     
@@ -248,6 +417,8 @@ def import_records():
             for item in items.get(record_type, []):
                 text = item.get('text', item) if isinstance(item, dict) else item
                 pos = item.get('pos', None) if isinstance(item, dict) else None
+                definition_en = item.get('definition_en', None) if isinstance(item, dict) else None
+                definition_zh = item.get('definition_zh', None) if isinstance(item, dict) else None
                 
                 cursor.execute('''
                     SELECT id FROM records 
@@ -256,9 +427,9 @@ def import_records():
                 
                 if not cursor.fetchone():
                     cursor.execute('''
-                        INSERT INTO records (user_id, date, type, content, pos) 
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (user_id, date, record_type, text, pos))
+                        INSERT INTO records (user_id, date, type, content, pos, definition_en, definition_zh) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (user_id, date, record_type, text, pos, definition_en, definition_zh))
                     count += 1
     
     conn.commit()
