@@ -136,7 +136,13 @@
 </head>
 <body>
     <div id="app">
-        <div class="login-container" v-if="!isLoggedIn">
+        <div v-if="!isInitialized" class="login-container">
+            <div class="login-card" style="text-align: center;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; margin: 20px auto;"></div>
+                <p style="color: #909399;">加载中...</p>
+            </div>
+        </div>
+        <div class="login-container" v-else-if="!isLoggedIn">
             <div class="login-card">
                 <div class="login-title">
                     <h1>英语每日记录</h1>
@@ -323,7 +329,12 @@
     <script>
         const { createApp, ref, computed, watch, onMounted } = Vue;
         
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = (() => {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:5000/api';
+            }
+            return '/api';
+        })();
         
         const POS_MAP = {
             'noun': '名词', 'verb': '动词', 'adjective': '形容词', 'adverb': '副词',
@@ -340,6 +351,7 @@
         createApp({
             setup() {
                 const isLoggedIn = ref(false);
+                const isInitialized = ref(false);
                 const loginMode = ref('login');
                 const username = ref('');
                 const password = ref('');
@@ -370,7 +382,11 @@
                 });
 
                 const checkAuth = async () => {
-                    if (!token.value) return;
+                    if (!token.value) {
+                        isInitialized.value = true;
+                        return;
+                    }
+                    isLoading.value = true;
                     try {
                         const res = await fetch(`${API_BASE}/user/info`, { headers: getHeaders() });
                         if (res.ok) {
@@ -385,7 +401,11 @@
                         }
                     } catch (e) {
                         console.error('Auth check failed:', e);
+                        localStorage.removeItem('token');
+                        token.value = '';
                     }
+                    isLoading.value = false;
+                    isInitialized.value = true;
                 };
 
                 const handleAuth = async () => {
@@ -708,7 +728,7 @@
                 }, { deep: true });
 
                 return {
-                    isLoggedIn, loginMode, username, password, userInfo, records, stats,
+                    isLoggedIn, isInitialized, loginMode, username, password, userInfo, records, stats,
                     currentType, inputContent, activeTab, searchKeyword, detectedPos,
                     isLoading, posFilter, isShuffled, toast, fileInput, allItems,
                     filteredWords, displayWords, shuffledWords, shuffledPhrases, shuffledSentences,
