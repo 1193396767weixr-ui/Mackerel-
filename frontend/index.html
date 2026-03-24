@@ -328,7 +328,6 @@
 .modal-title { font-size: 20px; font-weight: 600; color: #303133; }
 .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f5f7fa; cursor: pointer; font-size: 18px; color: #909399; display: flex; align-items: center; justify-content: center; }
 .modal-close:hover { background: #ebeef5; color: #606266; }
-.modal-body { }
 .definition-section { margin-bottom: 16px; }
 .definition-title { font-size: 14px; font-weight: 600; color: #606266; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .definition-title.en::before { content: '🇬🇧'; }
@@ -1136,13 +1135,14 @@
                 };
 
                 const exportData = async () => {
-                    const data = isOfflineMode.value ? records.value : await (await fetch(`${API_BASE}/records/export`, { headers: getHeaders() })).json();
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `英语记录_${new Date().toISOString().split('T')[0]}.json`;
-                    a.click();
+                    try {
+                        const data = isOfflineMode.value ? records.value : await (await fetch(`${API_BASE}/records/export`, { headers: getHeaders() })).json();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `英语记录_${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
                         URL.revokeObjectURL(url);
                         showToast('导出成功');
                     } catch (e) {
