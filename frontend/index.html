@@ -388,7 +388,15 @@
                     }
                     isLoading.value = true;
                     try {
-                        const res = await fetch(`${API_BASE}/user/info`, { headers: getHeaders() });
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+                        
+                        const res = await fetch(`${API_BASE}/user/info`, { 
+                            headers: getHeaders(),
+                            signal: controller.signal 
+                        });
+                        clearTimeout(timeoutId);
+                        
                         if (res.ok) {
                             const data = await res.json();
                             userInfo.value = data.user;
@@ -413,11 +421,18 @@
                     isLoading.value = true;
                     try {
                         const endpoint = loginMode.value === 'login' ? '/login' : '/register';
+                        
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 10000);
+                        
                         const res = await fetch(`${API_BASE}${endpoint}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: username.value, password: password.value })
+                            body: JSON.stringify({ username: username.value, password: password.value }),
+                            signal: controller.signal
                         });
+                        clearTimeout(timeoutId);
+                        
                         const data = await res.json();
                         if (res.ok) {
                             token.value = data.access_token;
@@ -427,10 +442,15 @@
                             showToast(data.message);
                             await fetchRecords();
                         } else {
-                            showToast(data.error, 'error');
+                            showToast(data.error || '操作失败', 'error');
                         }
                     } catch (e) {
-                        showToast('网络错误', 'error');
+                        console.error('Auth error:', e);
+                        if (e.name === 'AbortError') {
+                            showToast('请求超时，请检查网络连接', 'error');
+                        } else {
+                            showToast('网络错误，请检查服务器连接', 'error');
+                        }
                     }
                     isLoading.value = false;
                 };

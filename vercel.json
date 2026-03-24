@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api",
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/frontend/index.html"
+      "source": "/api/(.*)",
+      "destination": "/api/index"
     }
   ],
   "headers": [
@@ -18,5 +18,7 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
