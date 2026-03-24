@@ -1135,7 +1135,7 @@
                     <span class="section-action" @click="currentPage = 'timeline'">查看全部</span>
                 </div>
                 
-                <div v-if="todayItems.length === 0" class="empty-state">
+                <div v-if="!hasTodayItems" class="empty-state">
                     <div class="empty-icon">✏️</div>
                     <div class="empty-text">今天还没有记录</div>
                     <div class="empty-hint">开始添加你的第一个学习笔记</div>
@@ -1401,8 +1401,8 @@
                     <span class="modal-title">详情</span>
                     <button class="modal-close" @click="showModal = false">×</button>
                 </div>
-                <div class="modal-body">{{ modalContent.text }}</div>
-                <div class="modal-translation" v-if="modalContent.translation">
+                <div class="modal-body" style="white-space: pre-wrap; word-break: break-word;">{{ modalContent.text || '' }}</div>
+                <div class="modal-translation" v-if="modalContent.translation" style="white-space: pre-wrap; word-break: break-word;">
                     {{ modalContent.translation }}
                 </div>
             </div>
@@ -1672,6 +1672,16 @@
                     sentences: data.value.sentences.length,
                     passages: data.value.passages.length
                 }));
+                
+                const hasTodayItems = computed(() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    return ['words', 'phrases', 'sentences', 'passages'].some(type => 
+                        data.value[type].some(item => {
+                            const itemDate = item.date ? item.date.split('T')[0] : today;
+                            return itemDate === today;
+                        })
+                    );
+                });
                 
                 const todayItems = computed(() => {
                     const today = new Date().toISOString().split('T')[0];
@@ -2042,6 +2052,7 @@
                     todayDate,
                     stats,
                     todayItems,
+                    hasTodayItems,
                     filteredTimeline,
                     reciteItems,
                     getPlaceholder,
