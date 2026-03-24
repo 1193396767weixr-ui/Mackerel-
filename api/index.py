@@ -6,7 +6,6 @@ import os
 from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import threading
 
 app = Flask(__name__)
 CORS(app)
@@ -15,13 +14,12 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'english-tracker
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 jwt = JWTManager(app)
 
-_db_lock = threading.Lock()
-_db_initialized = False
-
 def get_db_url():
     db_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
     if not db_url:
         raise Exception('数据库连接字符串未配置，请设置 POSTGRES_URL 或 DATABASE_URL 环境变量')
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
     return db_url
 
 def get_db():
@@ -31,61 +29,50 @@ def get_db():
     return conn
 
 def init_db():
-    global _db_initialized
-    if _db_initialized:
-        return True
-    
-    with _db_lock:
-        if _db_initialized:
-            return True
-        try:
-            conn = get_db()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    username TEXT UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS records (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER NOT NULL,
-                    date TEXT NOT NULL,
-                    type TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    pos TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users (id)
-                )
-            ''')
-            
-            conn.commit()
-            conn.close()
-            _db_initialized = True
-            return True
-        except Exception as e:
-            print(f'数据库初始化失败: {e}')
-            raise e
-
-def ensure_db_init():
     try:
-        init_db()
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS records (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                type TEXT NOT NULL,
+                content TEXT NOT NULL,
+                pos TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
         return True
     except Exception as e:
+        print(f'数据库初始化失败: {e}')
         return str(e)
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据无效'}), 400
+    
     username = data.get('username', '').strip()
     password = data.get('password', '')
     
@@ -128,11 +115,15 @@ def register():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据无效'}), 400
+    
     username = data.get('username', '').strip()
     password = data.get('password', '')
     
@@ -164,9 +155,10 @@ def login():
 @app.route('/api/records', methods=['GET'])
 @jwt_required()
 def get_records():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     
@@ -205,9 +197,10 @@ def get_records():
 @app.route('/api/records', methods=['POST'])
 @jwt_required()
 def add_record():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -256,9 +249,10 @@ def add_record():
 @app.route('/api/records/<int:record_id>', methods=['DELETE'])
 @jwt_required()
 def delete_record(record_id):
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     
@@ -284,9 +278,10 @@ def delete_record(record_id):
 @app.route('/api/records/export', methods=['GET'])
 @jwt_required()
 def export_records():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     
@@ -325,9 +320,10 @@ def export_records():
 @app.route('/api/records/import', methods=['POST'])
 @jwt_required()
 def import_records():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -371,9 +367,10 @@ def import_records():
 @app.route('/api/user/info', methods=['GET'])
 @jwt_required()
 def get_user_info():
-    init_error = ensure_db_init()
-    if init_error != True:
-        return jsonify({'error': f'数据库初始化失败: {init_error}'}), 500
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     user_id = int(get_jwt_identity())
     
@@ -417,8 +414,11 @@ def get_user_info():
 @app.route('/api/init-db', methods=['POST'])
 def init_db_route():
     try:
-        init_db()
-        return jsonify({'message': '数据库初始化成功', 'success': True})
+        result = init_db()
+        if result == True:
+            return jsonify({'message': '数据库初始化成功', 'success': True})
+        else:
+            return jsonify({'error': result, 'success': False}), 500
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
 
