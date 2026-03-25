@@ -324,5 +324,3 @@ def delete_record(record_id):
     finally:
         if conn:
             conn.close()
-
-handler = app
