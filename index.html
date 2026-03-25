@@ -537,6 +537,22 @@
         .recite-badge.phrase { background: #faf5ed; color: var(--brown-dark); border: 1px solid var(--brown-light); }
         .recite-badge.sentence { background: #f8f2e8; color: var(--brown-dark); border: 1px solid var(--brown-light); }
 
+        .admin-stats { display: flex; gap: 12px; padding: 0 24px; margin-bottom: 24px; flex-wrap: wrap; }
+        .admin-section { padding: 0 24px; }
+        .section-title { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 1px; }
+        .user-list { background: var(--bg-card); border-radius: 16px; overflow: hidden; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .user-item:last-child { border-bottom: none; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+        .admin-badge { font-size: 10px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
+        .user-meta { font-size: 12px; color: var(--text-muted); }
+        .user-actions { display: flex; gap: 8px; }
+        .action-btn { padding: 6px 12px; font-size: 12px; border: 1px solid var(--brown-light); background: transparent; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+        .action-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+        .action-btn.danger { border-color: #e74c3c; color: #e74c3c; }
+        .action-btn.danger:hover { background: rgba(231,76,60,0.1); }
+
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--bg-card);
@@ -977,6 +993,65 @@
             </div>
         </div>
 
+        <div class="page" :class="{ active: currentPage === 'admin' }">
+            <div class="header">
+                <h1 class="header-title">管理后台</h1>
+                <p class="header-subtitle">用户管理与统计</p>
+            </div>
+            <div class="admin-stats" v-if="adminStats">
+                <div class="stat-card">
+                    <div class="stat-num">{{ adminStats.users }}</div>
+                    <div class="stat-label">用户总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ adminStats.records }}</div>
+                    <div class="stat-label">记录总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ adminStats.words }}</div>
+                    <div class="stat-label">单词</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ adminStats.phrases }}</div>
+                    <div class="stat-label">词组</div>
+                </div>
+            </div>
+            <div class="admin-section">
+                <div class="section-title">用户列表</div>
+                <div class="user-list">
+                    <div class="user-item" v-for="user in adminUsers" :key="user.id">
+                        <div class="user-info">
+                            <div class="user-name">{{ user.username }}
+                                <span v-if="user.is_admin" class="admin-badge">管理员</span>
+                            </div>
+                            <div class="user-meta">记录数: {{ user.record_count }} | 注册: {{ formatDate(user.created_at) }}</div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="action-btn" @click="showPasswordModal(user)">修改密码</button>
+                            <button class="action-btn danger" v-if="!user.is_admin" @click="deleteUser(user)">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" v-if="showPasswordEdit" @click.self="showPasswordEdit = false">
+            <div class="modal-box">
+                <div class="modal-head">
+                    <span class="modal-title">修改密码</span>
+                    <button class="modal-close" @click="showPasswordEdit = false">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-label">用户: {{ editingUser?.username }}</div>
+                    <input class="edit-input" type="password" v-model="newPassword" placeholder="输入新密码（至少6位）" />
+                </div>
+                <div class="modal-btns">
+                    <button class="modal-btn primary" @click="updatePassword">确认修改</button>
+                    <button class="modal-btn secondary" @click="showPasswordEdit = false">取消</button>
+                </div>
+            </div>
+        </div>
+
         <div class="bottom-nav">
             <div class="nav-item" :class="{ active: currentPage === 'home' }" @click="currentPage = 'home'">
                 <span class="nav-icon">✎</span>
@@ -993,6 +1068,10 @@
             <div class="nav-item" :class="{ active: currentPage === 'recite' }" @click="currentPage = 'recite'">
                 <span class="nav-icon">◉</span>
                 <span class="nav-label">背诵</span>
+            </div>
+            <div class="nav-item" v-if="isAdmin" :class="{ active: currentPage === 'admin' }" @click="currentPage = 'admin'; loadAdminData()">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-label">管理</span>
             </div>
         </div>
 
@@ -1072,6 +1151,13 @@ createApp({
         const selectedIds = ref(new Set());
         const favorites = ref(new Set());
         const checkins = ref([]);
+        
+        const isAdmin = ref(false);
+        const adminUsers = ref([]);
+        const adminStats = ref(null);
+        const showPasswordEdit = ref(false);
+        const editingUser = ref(null);
+        const newPassword = ref('');
 
         const setTimeTheme = () => {
             const hour = new Date().getHours();
@@ -1273,6 +1359,48 @@ createApp({
             }
         };
         const cancelEdit = () => { editingId.value = null; editMeaning.value = ''; };
+
+        const loadAdminData = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const [usersRes, statsRes] = await Promise.all([
+                    fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                if (usersRes.ok) adminUsers.value = await usersRes.json();
+                if (statsRes.ok) adminStats.value = await statsRes.json();
+            } catch (e) { console.error('加载管理数据失败:', e); }
+        };
+
+        const showPasswordModal = (user) => { editingUser.value = user; newPassword.value = ''; showPasswordEdit.value = true; };
+        
+        const updatePassword = async () => {
+            if (newPassword.value.length < 6) { showToast('密码至少6位', 'error'); return; }
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/admin/users/${editingUser.value.id}/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ password: newPassword.value })
+                });
+                const data = await res.json();
+                if (res.ok) { showToast('密码修改成功'); showPasswordEdit.value = false; }
+                else showToast(data.error, 'error');
+            } catch { showToast('修改失败', 'error'); }
+        };
+
+        const deleteUser = async (user) => {
+            if (!confirm(`确定删除用户 ${user.username}？此操作不可恢复！`)) return;
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/admin/users/${user.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) { showToast('用户已删除'); loadAdminData(); }
+                else showToast('删除失败', 'error');
+            } catch { showToast('删除失败', 'error'); }
+        };
 
         const toggleBatchMode = () => { batchMode.value = !batchMode.value; if (!batchMode.value) selectedIds.value = new Set(); };
         const toggleSelect = (id) => { const next = new Set(selectedIds.value); next.has(id) ? next.delete(id) : next.add(id); selectedIds.value = next; };

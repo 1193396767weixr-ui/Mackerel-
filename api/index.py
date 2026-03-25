@@ -78,6 +78,7 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                is_admin BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -95,6 +96,18 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE')
+        except:
+            pass
+        
+        cursor.execute('SELECT id FROM users WHERE username = %s', ('admin',))
+        if not cursor.fetchone():
+            cursor.execute('''
+                INSERT INTO users (username, password_hash, is_admin) 
+                VALUES (%s, %s, %s)
+            ''', ('admin', generate_password_hash('admin123'), True))
         
         conn.commit()
         return True
@@ -189,7 +202,7 @@ def login():
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
+        cursor.execute('SELECT id, username, password_hash, is_admin FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()
         
         if not user or not check_password_hash(user[2], password):
@@ -199,10 +212,144 @@ def login():
         return jsonify({
             'message': '登录成功',
             'access_token': access_token,
-            'user': {'id': user[0], 'username': user[1]}
+            'user': {'id': user[0], 'username': user[1], 'is_admin': user[3] or False}
         })
     except Exception as e:
         return jsonify({'error': f'登录失败: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
+
+def admin_required():
+    user_id = int(get_jwt_identity())
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT is_admin FROM users WHERE id = %s', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    if not user or not user[0]:
+        return False
+    return True
+
+@app.route('/api/admin/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT u.id, u.username, u.is_admin, u.created_at,
+                   COUNT(r.id) as record_count
+            FROM users u LEFT JOIN records r ON u.id = r.user_id
+            GROUP BY u.id ORDER BY u.created_at DESC
+        ''')
+        rows = cursor.fetchall()
+        
+        users = []
+        for row in rows:
+            users.append({
+                'id': row[0],
+                'username': row[1],
+                'is_admin': row[2] or False,
+                'created_at': row[3].isoformat() if row[3] else None,
+                'record_count': row[4]
+            })
+        return jsonify(users)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/admin/users/<int:user_id>/password', methods=['PUT'])
+@jwt_required()
+def update_user_password(user_id):
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    data = request.get_json() or {}
+    new_password = data.get('password', '')
+    
+    if len(new_password) < 6:
+        return jsonify({'error': '密码至少6个字符'}), 400
+    
+    conn = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        password_hash = generate_password_hash(new_password)
+        cursor.execute('UPDATE users SET password_hash = %s WHERE id = %s', (password_hash, user_id))
+        conn.commit()
+        return jsonify({'message': '密码修改成功'})
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM records WHERE user_id = %s', (user_id,))
+        cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
+        conn.commit()
+        return jsonify({'message': '用户删除成功'})
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/admin/stats', methods=['GET'])
+@jwt_required()
+def get_admin_stats():
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) FROM users')
+        user_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM records')
+        record_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM records WHERE type = %s', ('words',))
+        word_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM records WHERE type = %s', ('phrases',))
+        phrase_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM records WHERE type = %s', ('sentences',))
+        sentence_count = cursor.fetchone()[0]
+        
+        return jsonify({
+            'users': user_count,
+            'records': record_count,
+            'words': word_count,
+            'phrases': phrase_count,
+            'sentences': sentence_count
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     finally:
         if conn:
             conn.close()
