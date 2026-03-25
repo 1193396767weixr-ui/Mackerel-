@@ -302,6 +302,23 @@
             background: transparent;
         }
         .input-box::placeholder { color: var(--text-muted); }
+        .meaning-row { display: flex; gap: 10px; margin-bottom: 16px; }
+        .meaning-row .input-box { margin-bottom: 0; }
+        .fetch-meaning-btn {
+            padding: 0 20px; background: var(--accent);
+            color: white; border: none; border-radius: 14px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+            display: flex; align-items: center; justify-content: center;
+            min-width: 70px;
+        }
+        .fetch-meaning-btn:hover:not(:disabled) { background: #a8855c; transform: translateY(-1px); }
+        .fetch-meaning-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .spinner-small {
+            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
         .pos-tags {
             display: flex; gap: 8px; margin-bottom: 16px;
         }
@@ -828,7 +845,13 @@
                         <button class="type-pill" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
                     </div>
                     <input class="input-box" v-model="inputContent" @input="onInputChange" placeholder="输入单词、词组或句子..." />
-                    <input class="input-box" v-model="inputMeaning" placeholder="输入中文含义（可选）" style="margin-bottom:12px;" />
+                    <div class="meaning-row">
+                        <input class="input-box" v-model="inputMeaning" placeholder="输入中文含义（可选）" style="flex:1;" />
+                        <button class="fetch-meaning-btn" @click="fetchMeaning" :disabled="isLoadingMeaning || !inputContent.trim()">
+                            <span v-if="isLoadingMeaning" class="spinner-small"></span>
+                            <span v-else>释义</span>
+                        </button>
+                    </div>
                     <div class="pos-tags" v-if="detectedPos.length > 0">
                         <span class="pos-tag" v-for="p in detectedPos" :key="p">{{ p }}</span>
                     </div>
@@ -1147,6 +1170,7 @@ createApp({
 
         const currentPage = ref('home');
         const isLoading = ref(false);
+        const isLoadingMeaning = ref(false);
         const records = ref([]);
         const currentType = ref('auto');
         const inputContent = ref('');
@@ -1247,19 +1271,53 @@ createApp({
             const text = inputContent.value.trim();
             if (text.split(/\s+/).length === 1) {
                 try {
-                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`);
+                    const res = await fetch(`https://dict.youdao.com/suggest?num=1&doctype=json&q=${encodeURIComponent(text)}`);
                     if (res.ok) {
                         const data = await res.json();
-                        if (data[0]?.meanings) {
-                            detectedPos.value = [...new Set(data[0].meanings.map(m => m.partOfSpeech))];
-                            const definitions = data[0].meanings.flatMap(m => m.definitions?.slice(0,2).map(d => d.definition) || []);
-                            if (definitions.length > 0 && !inputMeaning.value.trim()) {
-                                inputMeaning.value = definitions.join('; ');
+                        if (data.data?.entries?.[0]?.explain) {
+                            const explain = data.data.entries[0].explain;
+                            const posMatch = explain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
+                            if (posMatch) {
+                                detectedPos.value = [posMatch[1].toLowerCase()];
                             }
                         }
                     }
                 } catch { detectedPos.value = []; }
             } else detectedPos.value = [];
+        };
+
+        const fetchMeaning = async () => {
+            if (!inputContent.value.trim()) return;
+            isLoadingMeaning.value = true;
+            const text = inputContent.value.trim();
+            try {
+                const res = await fetch(`https://dict.youdao.com/suggest?num=5&doctype=json&q=${encodeURIComponent(text)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.data?.entries?.length > 0) {
+                        const meanings = data.data.entries
+                            .filter(e => e.explain && !e.explain.includes(text.toLowerCase()))
+                            .slice(0, 3)
+                            .map(e => e.explain);
+                        if (meanings.length > 0) {
+                            inputMeaning.value = meanings.join('; ');
+                            const firstExplain = data.data.entries[0].explain;
+                            const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
+                            if (posMatch) {
+                                detectedPos.value = [posMatch[1].toLowerCase()];
+                            }
+                            showToast('已获取中文释义');
+                        } else {
+                            showToast('未找到释义', 'error');
+                        }
+                    } else {
+                        showToast('未找到该单词', 'error');
+                    }
+                }
+            } catch {
+                showToast('获取释义失败', 'error');
+            }
+            isLoadingMeaning.value = false;
         };
 
         const formatDate = (dateStr) => {
@@ -1486,7 +1544,34 @@ createApp({
                 const wc = inputContent.value.trim().split(/\s+/).length;
                 type = wc === 1 ? 'words' : (wc <= 5 && !inputContent.value.includes('.')) ? 'phrases' : 'sentences';
             }
-            const rec = { id: Date.now(), type, content: inputContent.value.trim(), meaning: inputMeaning.value.trim() || null, pos: detectedPos.value[0] || null, createdAt: new Date().toISOString() };
+            
+            let meaning = inputMeaning.value.trim() || null;
+            let pos = detectedPos.value[0] || null;
+            
+            if (!meaning) {
+                try {
+                    const res = await fetch(`https://dict.youdao.com/suggest?num=3&doctype=json&q=${encodeURIComponent(inputContent.value.trim())}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.data?.entries?.length > 0) {
+                            const meanings = data.data.entries
+                                .filter(e => e.explain && !e.explain.includes(inputContent.value.trim().toLowerCase()))
+                                .slice(0, 2)
+                                .map(e => e.explain);
+                            if (meanings.length > 0) {
+                                meaning = meanings.join('; ');
+                                const firstExplain = data.data.entries[0].explain;
+                                const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
+                                if (posMatch && !pos) {
+                                    pos = posMatch[1].toLowerCase();
+                                }
+                            }
+                        }
+                    }
+                } catch {}
+            }
+            
+            const rec = { id: Date.now(), type, content: inputContent.value.trim(), meaning, pos, createdAt: new Date().toISOString() };
             if (isOfflineMode.value) {
                 records.value.unshift(rec); localStorage.setItem('offline_records', JSON.stringify(records.value));
                 inputContent.value = ''; inputMeaning.value = ''; detectedPos.value = []; showToast('保存成功');
@@ -1570,12 +1655,12 @@ createApp({
 
         return {
             isInitialized, isLoggedIn, loginMode, username, password, userInfo, isOfflineMode,
-            currentPage, isLoading, records, currentType, inputContent, inputMeaning, detectedPos,
+            currentPage, isLoading, isLoadingMeaning, records, currentType, inputContent, inputMeaning, detectedPos,
             searchQuery, filterType, sortOrder, fileInput, showModal, modalItem, toast,
             reciteFilter, isShuffled, revealedIds, shuffledList,
             isDarkMode, editingId, editMeaning, batchMode, selectedIds, favorites, checkins,
             todayDate, stats, weeklyStats, streakDays, todayCheckedIn,
-            detectType, onInputChange, highlightText, filteredHistory, formatDate,
+            detectType, onInputChange, fetchMeaning, highlightText, filteredHistory, formatDate,
             totalWords, totalPhrases, totalSentences, groupedWords, reciteItems,
             toggleShuffle, setReciteFilter, toggleReveal, toggleSort,
             showToast, toggleTheme, speak, toggleFavorite, isFavorite, checkIn,
