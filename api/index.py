@@ -27,9 +27,13 @@ def get_db_url():
 
 def get_db():
     db_url = get_db_url()
-    conn = psycopg2.connect(db_url, sslmode='require')
-    conn.autocommit = False
-    return conn
+    try:
+        conn = psycopg2.connect(db_url)
+        conn.autocommit = False
+        return conn
+    except Exception as e:
+        print(f'数据库连接错误: {e}')
+        raise
 
 def init_db():
     try:
@@ -90,11 +94,18 @@ def health_check():
         }), 500
     
     try:
-        conn = get_db()
+        conn = psycopg2.connect(db_url)
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        cursor.close()
         conn.close()
         return jsonify({'status': 'ok', 'message': '数据库连接正常'})
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'数据库连接失败: {str(e)}'}), 500
+        return jsonify({'status': 'error', 'message': f'数据库连接失败: {str(e)}', 'url_prefix': db_url[:30] + '...' if db_url else None}), 500
+
+@app.route('/api/test', methods=['GET'])
+def test():
+    return jsonify({'status': 'ok', 'message': 'API工作正常'})
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -622,23 +633,5 @@ def init_db_route():
             return jsonify({'error': result, 'success': False}), 500
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
-
-@app.route('/api/health', methods=['GET'])
-def health():
-    try:
-        db_url = get_db_url()
-        conn = get_db()
-        conn.close()
-        return jsonify({
-            'status': 'ok',
-            'message': '服务正常运行',
-            'database': 'connected'
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': '数据库连接失败',
-            'error': str(e)
-        }), 500
 
 handler = app
