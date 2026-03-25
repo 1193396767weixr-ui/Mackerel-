@@ -33,6 +33,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            is_admin INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -50,6 +51,16 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0')
+    except:
+        pass
+    
+    cursor.execute('SELECT id FROM users WHERE username = ?', ('admin',))
+    if not cursor.fetchone():
+        cursor.execute('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, 1)', 
+                      ('admin', generate_password_hash('admin123')))
     
     conn.commit()
     conn.close()
@@ -115,7 +126,111 @@ def login():
     return jsonify({
         'message': '登录成功',
         'access_token': access_token,
-        'user': {'id': user['id'], 'username': user['username']}
+        'user': {'id': user['id'], 'username': user['username'], 'is_admin': bool(user['is_admin'])}
+    })
+
+def admin_required():
+    user_id = int(get_jwt_identity())
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT is_admin FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return user and user['is_admin']
+
+@app.route('/api/admin/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT u.id, u.username, u.is_admin, u.created_at,
+               (SELECT COUNT(*) FROM records WHERE user_id = u.id) as record_count
+        FROM users u ORDER BY u.created_at DESC
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    
+    users = []
+    for row in rows:
+        users.append({
+            'id': row['id'],
+            'username': row['username'],
+            'is_admin': bool(row['is_admin']),
+            'created_at': row['created_at'],
+            'record_count': row['record_count']
+        })
+    return jsonify(users)
+
+@app.route('/api/admin/users/<int:user_id>/password', methods=['PUT'])
+@jwt_required()
+def update_user_password(user_id):
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    data = request.get_json() or {}
+    new_password = data.get('password', '')
+    
+    if len(new_password) < 6:
+        return jsonify({'error': '密码至少6个字符'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    password_hash = generate_password_hash(new_password)
+    cursor.execute('UPDATE users SET password_hash = ? WHERE id = ?', (password_hash, user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '密码修改成功'})
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM records WHERE user_id = ?', (user_id,))
+    cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '用户删除成功'})
+
+@app.route('/api/admin/stats', methods=['GET'])
+@jwt_required()
+def get_admin_stats():
+    if not admin_required():
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT COUNT(*) FROM users')
+    user_count = cursor.fetchone()[0]
+    
+    cursor.execute('SELECT COUNT(*) FROM records')
+    record_count = cursor.fetchone()[0]
+    
+    cursor.execute('SELECT COUNT(*) FROM records WHERE type = ?', ('words',))
+    word_count = cursor.fetchone()[0]
+    
+    cursor.execute('SELECT COUNT(*) FROM records WHERE type = ?', ('phrases',))
+    phrase_count = cursor.fetchone()[0]
+    
+    cursor.execute('SELECT COUNT(*) FROM records WHERE type = ?', ('sentences',))
+    sentence_count = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    return jsonify({
+        'users': user_count,
+        'records': record_count,
+        'words': word_count,
+        'phrases': phrase_count,
+        'sentences': sentence_count
     })
 
 @app.route('/api/records', methods=['GET'])
