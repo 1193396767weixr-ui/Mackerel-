@@ -1,103 +1,28 @@
 {
-    "name": "英语每日记录",
-    "short_name": "英语记录",
-    "description": "每天进步一点点，英语学习记录与背诵工具",
-    "start_url": "/index.html",
-    "display": "standalone",
-    "background_color": "#f8f6f3",
-    "theme_color": "#f8f6f3",
-    "orientation": "portrait-primary",
-    "scope": "/",
-    "lang": "zh-CN",
-    "prefer_related_applications": false,
-    "icons": [
-        {
-            "src": "icons/icon-72.png",
-            "sizes": "72x72",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-96.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-144.png",
-            "sizes": "144x144",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-152.png",
-            "sizes": "152x152",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-384.png",
-            "sizes": "384x384",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ],
-    "categories": ["education", "productivity"],
-    "shortcuts": [
-        {
-            "name": "背诵模式",
-            "short_name": "背诵",
-            "description": "进入背诵模式",
-            "url": "/index.html?recite=true",
-            "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-        },
-        {
-            "name": "添加记录",
-            "short_name": "添加",
-            "description": "添加新的学习记录",
-            "url": "/index.html?add=true",
-            "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-        }
-    ],
-    "related_applications": [],
-    "screenshots": [],
-    "display_override": ["window-controls-overlay", "standalone", "browser"],
-    "edge_side_panel": {
-        "preferred_width": 400
+  "name": "Mackerel",
+  "short_name": "Mackerel",
+  "description": "英语学习记录应用",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6f3",
+  "theme_color": "#c9a86c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
-    "launch_handler": {
-        "client_mode": "navigate-existing"
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
-    "handle_links": "preferred",
-    "capture_links": "existing-client-navigate"
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
