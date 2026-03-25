@@ -79,13 +79,25 @@ def init_db():
         print(f'数据库初始化失败: {e}')
         return str(e)
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    db_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+    if not db_url:
+        return jsonify({
+            'status': 'error',
+            'message': '数据库未配置',
+            'hint': '请在Vercel环境变量中设置 POSTGRES_URL 或 DATABASE_URL'
+        }), 500
+    
+    try:
+        conn = get_db()
+        conn.close()
+        return jsonify({'status': 'ok', 'message': '数据库连接正常'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'数据库连接失败: {str(e)}'}), 500
+
 @app.route('/api/register', methods=['POST'])
 def register():
-    try:
-        init_db()
-    except Exception as e:
-        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
-    
     data = request.get_json()
     if not data:
         return jsonify({'error': '请求数据无效'}), 400
@@ -101,6 +113,11 @@ def register():
     
     if len(password) < 6:
         return jsonify({'error': '密码至少6个字符'}), 400
+    
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     conn = None
     try:
@@ -120,7 +137,8 @@ def register():
             'user': {'id': user_id, 'username': username}
         }), 201
     except psycopg2.errors.UniqueViolation:
-        conn.rollback()
+        if conn:
+            conn.rollback()
         return jsonify({'error': '用户名已存在'}), 400
     except Exception as e:
         if conn:
@@ -132,11 +150,6 @@ def register():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    try:
-        init_db()
-    except Exception as e:
-        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
-    
     data = request.get_json()
     if not data:
         return jsonify({'error': '请求数据无效'}), 400
@@ -146,6 +159,11 @@ def login():
     
     if not username or not password:
         return jsonify({'error': '用户名和密码不能为空'}), 400
+    
+    try:
+        init_db()
+    except Exception as e:
+        return jsonify({'error': f'数据库初始化失败: {str(e)}'}), 500
     
     conn = None
     try:

@@ -1295,7 +1295,10 @@ createApp({
                 const data = await res.json();
                 if (res.ok) { localStorage.setItem('token', data.access_token); userInfo.value = { username: data.user?.username || username.value }; isLoggedIn.value = true; await loadRecords(); showToast(loginMode.value === 'login' ? '登录成功' : '注册成功'); }
                 else showToast(data.error || '操作失败', 'error');
-            } catch { showToast('网络错误', 'error'); }
+            } catch (e) { 
+                console.error('认证错误:', e);
+                showToast('网络错误，请检查服务器配置', 'error'); 
+            }
             finally { isLoading.value = false; }
         };
 
