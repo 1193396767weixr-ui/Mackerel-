@@ -4,1437 +4,1425 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#f8f6f3">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f5f0e6">
     <title>英语每日记录</title>
-    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
-        html, body { 
-            font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif; 
-            min-height: 100vh;
-            background: #f8f6f3;
-            color: #2c2c2c;
-            line-height: 1.8;
-            -webkit-font-smoothing: antialiased;
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f0e6 0%, #ebe3d5 100%);
+            --bg-card: rgba(255,252,245,0.95);
+            --text-primary: #5c4a3d;
+            --text-secondary: #7a6655;
+            --text-muted: #a89888;
+            --accent: #b8956c;
+            --accent-light: rgba(184,149,108,0.15);
+            --shadow: 0 8px 32px rgba(92,74,61,0.1);
+            --shadow-lg: 0 20px 60px rgba(92,74,61,0.15);
+            --brown-light: #d4c4b0;
+            --brown-medium: #b8956c;
+            --brown-dark: #8b7355;
         }
-        
+
+        [data-time="morning"] { --bg-gradient: linear-gradient(135deg, #faf6ef 0%, #f0e8d8 100%); }
+        [data-time="afternoon"] { --bg-gradient: linear-gradient(135deg, #f5f0e6 0%, #ebe3d5 100%); }
+        [data-time="evening"] { --bg-gradient: linear-gradient(135deg, #f0e8d8 0%, #e5dcc8 100%); }
+        [data-time="night"] { --bg-gradient: linear-gradient(135deg, #e8e0d0 0%, #ddd3c0 100%); }
+
+        [data-theme="dark"] { 
+            --bg-gradient: linear-gradient(135deg, #3d3530 0%, #2d2820 100%); 
+            --bg-card: rgba(45,40,32,0.95); 
+            --text-primary: #e8e0d0; 
+            --text-secondary: #c4b8a8; 
+            --text-muted: #8a8070; 
+            --accent: #d4a574;
+            --accent-light: rgba(212,165,116,0.2);
+        }
+
+        html, body {
+            font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .bg-layer {
+            position: fixed; inset: 0;
+            background: var(--bg-gradient);
+            z-index: -1;
+            transition: background 1s ease;
+        }
+        .bg-layer::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
         .login-page {
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             padding: 24px;
-            background: #f8f6f3;
         }
-        
         .login-card {
-            background: #fff;
-            border-radius: 4px;
-            padding: 56px 48px;
-            width: 100%;
-            max-width: 380px;
-            box-shadow: 0 2px 24px rgba(0, 0, 0, 0.04);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 48px 36px;
+            width: 100%; max-width: 360px;
+            box-shadow: var(--shadow-lg);
         }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .login-icon {
-            width: 64px;
-            height: 64px;
-            background: #2c2c2c;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .login-logo {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, var(--accent), var(--brown-dark));
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
             margin: 0 auto 24px;
-            font-size: 28px;
+            font-size: 32px; color: #fff;
+            box-shadow: 0 8px 24px rgba(184,149,108,0.4);
         }
-        
         .login-title {
-            font-size: 22px;
-            font-weight: 400;
-            color: #1a1a1a;
-            letter-spacing: 6px;
+            font-size: 24px; font-weight: 400;
+            text-align: center; letter-spacing: 2px;
             margin-bottom: 8px;
         }
-        
         .login-subtitle {
-            font-size: 13px;
-            color: #999;
-            letter-spacing: 2px;
-            font-weight: 300;
+            font-size: 13px; color: var(--text-muted);
+            text-align: center; margin-bottom: 32px;
         }
-        
         .login-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 32px;
-            margin-bottom: 32px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #eee;
+            display: flex; gap: 8px; margin-bottom: 24px;
+            background: var(--accent-light);
+            border-radius: 16px; padding: 4px;
         }
-        
         .login-tab {
-            padding: 8px 0;
-            cursor: pointer;
-            color: #999;
-            font-size: 14px;
-            letter-spacing: 2px;
-            font-weight: 400;
-            position: relative;
-            transition: color 0.3s ease;
+            flex: 1; padding: 12px; text-align: center;
+            border-radius: 12px; font-size: 14px;
+            color: var(--text-muted); cursor: pointer;
+            transition: all 0.3s;
         }
-        
         .login-tab.active {
-            color: #1a1a1a;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
         }
-        
-        .login-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -17px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #1a1a1a;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
+        .form-group { margin-bottom: 20px; }
         .form-label {
-            display: block;
-            margin-bottom: 10px;
-            color: #666;
-            font-size: 12px;
+            display: block; font-size: 12px;
+            color: var(--text-muted); margin-bottom: 8px;
             letter-spacing: 1px;
-            font-weight: 400;
         }
-        
         .form-input {
-            width: 100%;
-            padding: 14px 0;
-            border: none;
-            border-bottom: 1px solid #e5e5e5;
-            font-size: 15px;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
-            outline: none;
-            background: transparent;
-            letter-spacing: 0.5px;
+            width: 100%; padding: 14px 18px;
+            background: rgba(0,0,0,0.03);
+            border: 1.5px solid transparent;
+            border-radius: 14px; font-size: 15px;
+            font-family: inherit; color: var(--text-primary);
+            outline: none; transition: all 0.3s;
         }
-        
         .form-input:focus {
-            border-bottom-color: #1a1a1a;
-        }
-        
-        .form-input::placeholder {
-            color: #ccc;
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: #1a1a1a;
-            color: white;
-            border: none;
-            border-radius: 2px;
-            font-size: 14px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 4px;
-            font-weight: 400;
-            margin-top: 16px;
-        }
-        
-        .login-btn:hover {
-            background: #333;
-        }
-        
-        .login-btn:active {
-            transform: scale(0.99);
-        }
-        
-        .login-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .offline-hint {
-            text-align: center;
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid #eee;
-        }
-        
-        .offline-hint p {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-        
-        .offline-btn {
-            display: inline-block;
-            padding: 10px 20px;
+            border-color: var(--accent);
             background: transparent;
-            color: #666;
-            border: 1px solid #ddd;
-            border-radius: 2px;
-            font-size: 13px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
         }
-        
-        .offline-btn:hover {
-            border-color: #999;
-            color: #333;
+        .form-input::placeholder { color: var(--text-muted); }
+        .login-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--accent), var(--brown-dark));
+            border: none; border-radius: 14px;
+            font-size: 15px; font-family: inherit;
+            color: #fff; cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 24px rgba(184,149,108,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(184,149,108,0.5); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .offline-hint {
+            margin-top: 24px; padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .offline-hint p { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+        .offline-btn {
+            padding: 10px 24px; background: transparent;
+            border: 1.5px solid var(--text-muted);
+            border-radius: 20px; font-size: 13px;
+            font-family: inherit; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .offline-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .spinner {
+            display: inline-block; width: 16px; height: 16px;
             border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid #fff;
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
-            vertical-align: middle;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .app { min-height: 100vh; padding-bottom: 90px; }
+        .page { display: none; }
+        .page.active { display: block; animation: slideUp 0.4s ease; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .app-container { 
-            max-width: 680px; 
-            margin: 0 auto; 
-            padding: 0 24px 120px;
-            min-height: 100vh;
-        }
-        
-        .app-header { 
-            padding: 48px 0 32px;
+
+        .header {
+            padding: 48px 24px 32px;
             text-align: center;
         }
-        
-        .app-header h1 { 
-            font-size: 20px;
-            font-weight: 400;
-            letter-spacing: 8px;
-            color: #1a1a1a;
-            margin-bottom: 8px;
+        .header-time {
+            font-size: 12px; color: var(--text-muted);
+            letter-spacing: 2px; margin-bottom: 8px;
         }
-        
-        .app-header p { 
-            font-size: 13px;
-            color: #999;
-            letter-spacing: 2px;
-            font-weight: 300;
+        .header-title {
+            font-size: 28px; font-weight: 300;
+            color: var(--text-primary); letter-spacing: 4px;
         }
-        
-        .user-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
+        .header-subtitle {
+            font-size: 13px; color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .header-actions {
+            display: flex; justify-content: center; gap: 12px;
             margin-top: 16px;
-            font-size: 12px;
-            color: #999;
         }
-        
-        .logout-btn { 
-            background: transparent;
-            border: 1px solid #ddd;
-            color: #999;
-            padding: 6px 16px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
+        .header-btn {
+            padding: 8px 16px; background: var(--accent-light);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--brown-light);
+            border-radius: 20px; font-size: 12px;
+            font-family: inherit; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.3s;
         }
-        
-        .logout-btn:hover {
-            border-color: #999;
-            color: #666;
+        .header-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+
+        .stats-row {
+            display: flex; justify-content: center; gap: 12px;
+            padding: 0 24px; margin-bottom: 24px;
         }
-        
-        .stat-row { 
-            display: flex; 
-            gap: 24px; 
-            margin-bottom: 40px;
-            justify-content: center;
-        }
-        
-        .stat-card { 
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px; padding: 20px 28px;
             text-align: center;
-            padding: 20px 32px;
-            background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            box-shadow: var(--shadow);
+            min-width: 90px;
         }
-        
-        .stat-card .value { 
-            font-size: 32px;
-            font-weight: 300;
-            color: #1a1a1a;
-            line-height: 1.2;
+        .stat-num {
+            font-size: 32px; font-weight: 300;
+            color: var(--text-primary); line-height: 1;
         }
-        
-        .stat-card .label { 
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-            letter-spacing: 1px;
+        .stat-label {
+            font-size: 11px; color: var(--text-muted);
+            letter-spacing: 1px; margin-top: 4px;
         }
-        
-        .section-block {
-            background: #fff;
-            border-radius: 4px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+
+        .streak-banner {
+            margin: 0 24px 24px;
+            background: linear-gradient(135deg, var(--accent-light), rgba(184,149,108,0.08));
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--brown-light);
+            border-radius: 24px; padding: 24px;
+            text-align: center; color: var(--text-primary);
         }
-        
-        .section-title {
-            font-size: 13px;
-            font-weight: 500;
-            color: #1a1a1a;
-            margin-bottom: 24px;
-            letter-spacing: 2px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
+        .streak-num {
+            font-size: 48px; font-weight: 300;
+            color: var(--accent);
         }
-        
-        .type-selector { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 20px;
-        }
-        
-        .type-btn { 
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #e5e5e5;
-            border-radius: 2px;
-            background: #fff;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 13px;
-            color: #666;
-            font-family: inherit;
-            letter-spacing: 1px;
-        }
-        
-        .type-btn:hover {
-            border-color: #ccc;
-        }
-        
-        .type-btn.active { 
-            border-color: #1a1a1a;
-            background: #1a1a1a;
-            color: #fff;
-        }
-        
-        .input-wrapper { 
-            display: flex; 
-            gap: 12px;
-        }
-        
-        .main-input { 
-            flex: 1;
-            padding: 14px 0;
-            border: none;
-            border-bottom: 1px solid #e5e5e5;
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.3s ease;
-            background: transparent;
-            font-family: inherit;
-        }
-        
-        .main-input:focus { 
-            border-bottom-color: #1a1a1a;
-        }
-        
-        .main-input::placeholder {
-            color: #ccc;
-        }
-        
-        .submit-btn { 
-            padding: 14px 28px;
-            background: #1a1a1a;
-            color: white;
-            border: none;
-            border-radius: 2px;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.3s ease;
+        .streak-label {
+            font-size: 12px; color: var(--text-muted);
             letter-spacing: 2px;
         }
-        
-        .submit-btn:hover {
-            background: #333;
+        .checkin-btn {
+            margin-top: 16px; padding: 12px 32px;
+            background: var(--accent);
+            border: none; border-radius: 24px; font-size: 14px;
+            font-family: inherit; color: #fff;
+            cursor: pointer; transition: all 0.3s;
         }
-        
-        .submit-btn:disabled { 
-            opacity: 0.5;
-            cursor: not-allowed;
+        .checkin-btn:hover { background: var(--brown-dark); }
+        .checkin-btn.done { opacity: 0.6; cursor: default; background: var(--brown-light); }
+
+        .section { padding: 0 24px; margin-bottom: 24px; }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 24px;
+            box-shadow: var(--shadow);
         }
-        
-        .auto-detect-hint { 
-            margin-top: 12px;
-            font-size: 12px;
-            color: #999;
-            text-align: center;
+
+        .input-section { margin-bottom: 24px; }
+        .type-pills {
+            display: flex; gap: 8px; margin-bottom: 20px;
+            overflow-x: auto; padding-bottom: 4px;
+        }
+        .type-pills::-webkit-scrollbar { display: none; }
+        .type-pill {
+            padding: 10px 18px; background: transparent;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: 24px; font-size: 14px;
+            font-family: inherit; color: var(--text-secondary);
+            cursor: pointer; white-space: nowrap;
+            transition: all 0.3s;
+        }
+        .type-pill.active {
+            background: var(--accent);
+            border-color: var(--accent); color: #fff;
+            box-shadow: 0 4px 16px rgba(184,149,108,0.4);
+        }
+        .input-box {
+            width: 100%; padding: 18px 20px;
+            background: rgba(0,0,0,0.03);
+            border: 2px solid transparent;
+            border-radius: 18px; font-size: 16px;
+            font-family: inherit; color: var(--text-primary);
+            outline: none; margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+        .input-box:focus {
+            border-color: var(--accent);
+            background: transparent;
+        }
+        .input-box::placeholder { color: var(--text-muted); }
+        .pos-tags {
+            display: flex; gap: 8px; margin-bottom: 16px;
+        }
+        .pos-tag {
+            padding: 6px 14px; background: var(--accent-light);
+            border-radius: 12px; font-size: 12px;
+            color: var(--accent);
+        }
+        .hint {
+            font-size: 12px; color: var(--text-muted);
+            text-align: center; margin-bottom: 16px;
+        }
+        .submit-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--accent), var(--brown-dark));
+            border: none; border-radius: 16px;
+            font-size: 15px; font-family: inherit;
+            color: #fff; cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 24px rgba(184,149,108,0.4);
+            transition: all 0.3s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(184,149,108,0.5); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .search-section {
+            padding: 0 24px; margin-bottom: 16px;
+        }
+        .search-box {
+            width: 100%; padding: 14px 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: none; border-radius: 24px;
+            font-size: 15px; font-family: inherit;
+            color: var(--text-primary); outline: none;
+            box-shadow: var(--shadow);
+        }
+        .search-box::placeholder { color: var(--text-muted); }
+
+        .filter-section {
+            display: flex; gap: 8px; padding: 0 24px;
+            margin-bottom: 20px; overflow-x: auto;
+        }
+        .filter-section::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            padding: 10px 18px; background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px; font-size: 14px;
+            color: var(--text-secondary); cursor: pointer;
+            white-space: nowrap; transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+        .filter-chip.active {
+            background: var(--accent); color: #fff;
+        }
+        .filter-action {
+            padding: 10px 16px; background: var(--accent-light);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--brown-light);
+            border-radius: 20px; font-size: 13px;
+            font-family: inherit; color: var(--text-secondary);
+            cursor: pointer; white-space: nowrap;
+            margin-left: auto;
+        }
+        .filter-action.active {
+            background: var(--accent); color: #fff; border-color: var(--accent);
+        }
+
+        .record-list { padding: 0 24px; }
+        .record-group {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+        .record-date {
+            font-size: 13px; color: var(--text-muted);
+            margin-bottom: 16px; padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            letter-spacing: 1px;
+        }
+        .record-category { margin-bottom: 12px; }
+        .record-category:last-child { margin-bottom: 0; }
+        .category-label {
+            font-size: 11px; color: var(--text-muted);
+            margin-bottom: 10px; letter-spacing: 1px;
+        }
+        .item-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .item {
+            display: inline-flex; align-items: center;
+            padding: 10px 16px; background: rgba(0,0,0,0.03);
+            border-radius: 16px; font-size: 15px;
+            color: var(--text-primary); cursor: pointer;
+            position: relative; transition: all 0.2s;
+        }
+        .item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .item.word { background: linear-gradient(135deg, #f5ebe0, #e8dcc8); color: var(--brown-dark); border: 1px solid var(--brown-light); }
+        .item.phrase { background: linear-gradient(135deg, #faf5ed, #f0e8d8); color: var(--brown-dark); border: 1px solid var(--brown-light); }
+        .item.sentence { background: linear-gradient(135deg, #f8f2e8, #efe5d5); color: var(--brown-dark); border: 1px solid var(--brown-light); }
+        .item-full {
+            width: 100%; border-radius: 16px;
+            padding: 14px 16px; line-height: 1.7;
+        }
+        .item-pos {
+            font-size: 10px; padding: 2px 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px; margin-left: 8px;
+        }
+        .item-action {
+            margin-left: 8px; font-size: 14px;
+            opacity: 0.4; cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .item-action:hover { opacity: 1; }
+        .item-action.fav { color: #f59e0b; }
+        .item-action.fav.active { opacity: 1; }
+        .item-delete {
+            position: absolute; right: -6px; top: -6px;
+            width: 20px; height: 20px;
+            background: #ef4444; color: #fff;
+            border-radius: 50%; font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s;
+            cursor: pointer;
+        }
+        .item:hover .item-delete { opacity: 1; }
+        .highlight { background: rgba(245,158,11,0.3); padding: 0 2px; border-radius: 2px; }
+
+        .batch-mode .item { padding-right: 40px; }
+        .batch-check {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%);
+            width: 22px; height: 22px;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: #fff;
+            transition: all 0.2s;
+        }
+        .batch-check.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .batch-bar {
+            position: fixed; bottom: 90px; left: 16px; right: 16px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px; padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .batch-info { font-size: 14px; color: var(--text-secondary); }
+        .batch-del-btn {
+            padding: 10px 24px; background: #ef4444;
+            border: none; border-radius: 14px;
+            font-size: 14px; font-family: inherit;
+            color: #fff; cursor: pointer;
+        }
+
+        .total-section { padding: 0 24px; }
+        .total-group {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+        .total-title {
+            font-size: 15px; color: var(--text-primary);
+            margin-bottom: 16px; padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            letter-spacing: 1px;
+        }
+        .pos-section { margin-bottom: 12px; }
+        .pos-section:last-child { margin-bottom: 0; }
+        .pos-title {
+            font-size: 11px; color: var(--text-muted);
+            margin-bottom: 10px; letter-spacing: 1px;
+        }
+
+        .empty {
+            text-align: center; padding: 60px 24px;
+            color: var(--text-muted);
+        }
+        .empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 16px; }
+        .empty-text { font-size: 16px; margin-bottom: 8px; }
+        .empty-hint { font-size: 13px; }
+
+        .recite-section { padding: 0 24px; }
+        .recite-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 24px; overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .recite-item {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .recite-item:last-child { border-bottom: none; }
+        .recite-english {
+            font-size: 18px; font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 12px;
             letter-spacing: 0.5px;
         }
-        
-        .pos-display { 
-            margin-top: 16px;
-            padding: 12px 16px;
-            background: #fafafa;
-            border-radius: 2px;
-            font-size: 12px;
+        .recite-meaning {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+            transition: all 0.3s;
         }
-        
-        .pos-display .pos-label { 
-            color: #999;
-            margin-right: 8px;
+        .recite-meaning.blur {
+            filter: blur(8px); user-select: none;
+            opacity: 0.3;
         }
-        
-        .pos-display .pos-tags { 
-            display: inline-flex;
-            gap: 6px;
-            flex-wrap: wrap;
+        .recite-actions {
+            display: flex; align-items: center; gap: 12px;
         }
-        
-        .pos-tag { 
-            padding: 2px 8px;
-            border-radius: 2px;
-            font-size: 11px;
-            font-weight: 500;
+        .reveal-btn {
+            padding: 8px 16px;
+            background: var(--accent-light);
+            border: 1px solid var(--brown-light);
+            border-radius: 12px;
+            cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; font-family: inherit;
+            color: var(--text-secondary);
+            transition: all 0.3s;
         }
-        
-        .pos-tag.noun { background: #f5f5f5; color: #666; }
-        .pos-tag.verb { background: #f5f5f5; color: #666; }
-        .pos-tag.adjective { background: #f5f5f5; color: #666; }
-        .pos-tag.adverb { background: #f5f5f5; color: #666; }
-        .pos-tag.preposition { background: #f5f5f5; color: #666; }
-        .pos-tag.conjunction { background: #f5f5f5; color: #666; }
-        .pos-tag.pronoun { background: #f5f5f5; color: #666; }
-        .pos-tag.interjection { background: #f5f5f5; color: #666; }
-        .pos-tag.unknown { background: #f5f5f5; color: #999; }
-        
-        .tabs { 
-            display: flex;
-            gap: 32px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f0f0f0;
+        .reveal-btn.on {
+            background: var(--accent); color: #fff;
+            border-color: var(--accent);
         }
-        
-        .tab { 
-            padding: 8px 0;
-            cursor: pointer;
-            font-size: 13px;
-            color: #999;
-            transition: color 0.3s ease;
-            letter-spacing: 1px;
+        .recite-badge {
+            padding: 4px 12px; border-radius: 12px;
+            font-size: 11px; letter-spacing: 0.5px;
+        }
+        .recite-badge.word { background: #f5ebe0; color: var(--brown-dark); border: 1px solid var(--brown-light); }
+        .recite-badge.phrase { background: #faf5ed; color: var(--brown-dark); border: 1px solid var(--brown-light); }
+        .recite-badge.sentence { background: #f8f2e8; color: var(--brown-dark); border: 1px solid var(--brown-light); }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            display: flex; justify-content: center;
+            padding: 12px 24px 24px;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.1);
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 8px 28px; color: var(--text-muted);
+            cursor: pointer; transition: all 0.3s;
             position: relative;
         }
-        
-        .tab.active { 
-            color: #1a1a1a;
+        .nav-item.active { color: var(--accent); }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: 0;
+            left: 50%; transform: translateX(-50%);
+            width: 24px; height: 3px;
+            background: var(--accent);
+            border-radius: 3px;
         }
-        
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -17px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #1a1a1a;
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        .nav-label { font-size: 10px; letter-spacing: 1px; }
+
+        .float-actions {
+            position: fixed; bottom: 100px; right: 20px;
+            display: flex; flex-direction: column; gap: 12px;
         }
-        
-        .search-bar { 
-            margin-bottom: 20px;
+        .float-btn {
+            width: 50px; height: 50px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: none; border-radius: 50%;
+            font-size: 18px; cursor: pointer;
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
         }
-        
-        .search-input { 
-            width: 100%;
-            padding: 12px 0;
-            border: none;
-            border-bottom: 1px solid #e5e5e5;
-            font-size: 14px;
-            background: transparent;
-            outline: none;
-            transition: border-color 0.3s ease;
-            font-family: inherit;
+        .float-btn:hover { transform: scale(1.1); }
+        .float-btn.danger:hover { color: #ef4444; }
+
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; padding: 24px;
+            animation: fadeIn 0.2s;
         }
-        
-        .search-input:focus {
-            border-bottom-color: #1a1a1a;
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 28px; padding: 28px;
+            width: 100%; max-width: 400px;
+            max-height: 70vh; overflow-y: auto;
+            animation: modalUp 0.3s ease;
         }
-        
-        .search-input::placeholder {
-            color: #ccc;
+        @keyframes modalUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
-        .filter-bar { 
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
+        .modal-head {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
         }
-        
-        .filter-btn { 
-            padding: 8px 16px;
-            border: 1px solid #e5e5e5;
-            border-radius: 2px;
-            background: #fff;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
+        .modal-title {
+            font-size: 18px; font-weight: 400;
+            letter-spacing: 1px;
+        }
+        .modal-close {
+            width: 36px; height: 36px;
+            background: rgba(0,0,0,0.04);
+            border: none; border-radius: 50%;
+            font-size: 18px; color: var(--text-muted);
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .modal-body { font-size: 16px; line-height: 1.8; }
+        .modal-english {
+            font-size: 20px; font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 16px;
             letter-spacing: 0.5px;
-            color: #666;
         }
-        
-        .filter-btn:hover {
-            border-color: #ccc;
+        .modal-label {
+            font-size: 12px; color: var(--text-muted);
+            margin-bottom: 8px; letter-spacing: 1px;
         }
-        
-        .filter-btn.active { 
-            border-color: #1a1a1a;
-            color: #1a1a1a;
+        .modal-meaning {
+            font-size: 15px; color: var(--text-secondary);
+            line-height: 1.7; padding: 12px 16px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 12px;
         }
-        
-        .order-btn { 
-            padding: 8px 16px;
-            border: 1px solid #e5e5e5;
-            border-radius: 2px;
-            background: #fff;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-family: inherit;
-            color: #666;
+        .modal-tags {
+            display: flex; gap: 8px; margin-top: 16px;
         }
-        
-        .order-btn:hover {
-            border-color: #ccc;
+        .modal-tag {
+            padding: 6px 14px; background: rgba(0,0,0,0.04);
+            border-radius: 12px; font-size: 12px;
+            color: var(--text-secondary);
         }
-        
-        .order-btn.active { 
-            border-color: #1a1a1a;
-            color: #1a1a1a;
+        .modal-btns {
+            display: flex; gap: 10px; margin-top: 24px;
         }
-        
-        .date-group { 
-            margin-bottom: 32px;
+        .modal-btn {
+            flex: 1; padding: 14px;
+            border: none; border-radius: 14px;
+            font-size: 14px; font-family: inherit;
+            cursor: pointer; transition: all 0.3s;
         }
-        
-        .date-group:last-child {
-            margin-bottom: 0;
+        .modal-btn.primary {
+            background: var(--accent); color: #fff;
         }
-        
-        .date-header { 
-            font-size: 13px;
-            color: #1a1a1a;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #f0f0f0;
-            letter-spacing: 1px;
+        .modal-btn.secondary {
+            background: rgba(0,0,0,0.04); color: var(--text-secondary);
         }
-        
-        .category-section { 
-            margin-bottom: 16px;
+        .edit-input {
+            width: 100%; padding: 14px 16px;
+            background: rgba(0,0,0,0.03);
+            border: 2px solid transparent;
+            border-radius: 14px; font-size: 15px;
+            font-family: inherit; color: var(--text-primary);
+            outline: none;
         }
-        
-        .category-title { 
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 12px;
-            font-weight: 400;
-            letter-spacing: 1px;
-        }
-        
-        .item-list { 
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .item-tag { 
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 2px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #fafafa;
-            color: #333;
-        }
-        
-        .item-tag:hover {
-            background: #f0f0f0;
-        }
-        
-        .item-tag.sentences { 
-            border-radius: 2px;
-            padding: 12px 16px;
-            width: 100%;
-            background: #fafafa;
-            line-height: 1.6;
-        }
-        
-        .item-tag .word-content { 
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .item-tag .word-pos { 
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 2px;
-            background: #e5e5e5;
-            color: #666;
-        }
-        
-        .item-tag .delete-btn { 
-            margin-left: 8px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #e5e5e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            color: #999;
-        }
-        
-        .item-tag:hover .delete-btn { 
-            opacity: 1;
-        }
-        
-        .total-category { 
-            margin-bottom: 32px;
-        }
-        
-        .total-category:last-child {
-            margin-bottom: 0;
-        }
-        
-        .total-category-title { 
-            font-size: 13px;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 1px;
-            color: #1a1a1a;
-        }
-        
-        .pos-group { 
-            margin-bottom: 16px;
-        }
-        
-        .pos-group-title { 
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 12px;
-            font-weight: 400;
-            letter-spacing: 1px;
-        }
-        
-        .toolbar { 
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #fff;
-            padding: 16px 24px;
-            display: flex;
-            gap: 12px;
-            box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
-            z-index: 100;
-        }
-        
-        .toolbar-inner {
-            max-width: 680px;
-            margin: 0 auto;
-            display: flex;
-            gap: 12px;
-            width: 100%;
-        }
-        
-        .toolbar-btn { 
-            flex: 1;
-            padding: 14px;
-            border: 1px solid #e5e5e5;
-            border-radius: 2px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            background: #fff;
-            color: #666;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
-        }
-        
-        .toolbar-btn:hover {
-            border-color: #ccc;
-            color: #333;
-        }
-        
-        .empty-state { 
-            text-align: center;
-            padding: 48px 24px;
-            color: #999;
-        }
-        
-        .empty-state .icon { 
-            font-size: 40px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-        
-        .empty-state p {
-            font-size: 13px;
-            letter-spacing: 1px;
-        }
-        
-        .toast { 
-            position: fixed;
-            top: 24px;
-            left: 50%;
+        .edit-input:focus { border-color: var(--accent); }
+
+        .toast {
+            position: fixed; top: 50px; left: 50%;
             transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: 2px;
-            color: white;
-            font-size: 13px;
+            padding: 14px 28px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 16px; font-size: 14px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-lg);
             z-index: 1000;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: toastIn 0.3s ease;
         }
-        
-        .toast.success { background: #1a1a1a; }
-        .toast.error { background: #d32f2f; }
-        .toast.warning { background: #ed6c02; }
-        
-        .fade-enter-active, .fade-leave-active {
-            transition: opacity 0.3s ease;
+        .toast.error { background: #ef4444; color: #fff; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-        
-        .fade-enter-from, .fade-leave-to {
-            opacity: 0;
+
+        .chart-section { margin-bottom: 24px; }
+        .chart-title {
+            font-size: 12px; color: var(--text-muted);
+            margin-bottom: 16px; letter-spacing: 1px;
         }
-        
-        @media (max-width: 600px) {
-            .login-card { 
-                padding: 40px 32px;
-            }
-            
-            .login-title { 
-                font-size: 20px;
-                letter-spacing: 4px;
-            }
-            
-            .stat-row { 
-                gap: 12px;
-            }
-            
-            .stat-card { 
-                padding: 16px 20px;
-            }
-            
-            .stat-card .value { 
-                font-size: 24px;
-            }
-            
-            .section-block {
-                padding: 24px;
-            }
-            
-            .input-wrapper { 
-                flex-direction: column;
-            }
-            
-            .submit-btn { 
-                width: 100%;
-            }
-            
-            .type-selector {
-                flex-wrap: wrap;
-            }
-            
-            .type-btn {
-                min-width: calc(50% - 6px);
-            }
-            
-            .app-container {
-                padding: 0 16px 120px;
-            }
-            
-            .toolbar {
-                padding: 12px 16px;
-            }
+        .chart-bars {
+            display: flex; align-items: flex-end;
+            gap: 8px; height: 100px;
+        }
+        .chart-col { flex: 1; text-align: center; }
+        .chart-bar {
+            width: 100%; background: var(--accent);
+            border-radius: 6px 6px 0 0;
+            min-height: 4px;
+            transition: height 0.5s ease;
+        }
+        .chart-val { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+        .chart-day { font-size: 10px; color: var(--text-muted); margin-top: 6px; }
+
+        @media (max-width: 400px) {
+            .header { padding: 40px 16px 24px; }
+            .section, .search-section, .filter-section, .record-list, .total-section, .recite-section { padding-left: 16px; padding-right: 16px; }
+            .stats-row { padding: 0 16px; gap: 8px; }
+            .stat-card { padding: 16px 20px; min-width: 80px; }
+            .login-card { padding: 40px 28px; }
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div v-if="!isInitialized" class="login-page">
-            <div class="login-card" style="text-align: center;">
-                <div class="loading-spinner" style="width: 32px; height: 32px; border-color: #e5e5e5; border-top-color: #1a1a1a; margin: 20px auto;"></div>
-                <p style="color: #999; letter-spacing: 1px; font-size: 13px;">加载中...</p>
-            </div>
+<div class="bg-layer"></div>
+<div id="app">
+    <div v-if="!isInitialized" class="login-page">
+        <div class="login-card" style="text-align:center; padding: 60px 36px;">
+            <div class="spinner" style="width:28px;height:28px;border-color:#ddd;border-top-color:var(--accent);margin:0 auto 16px;"></div>
+            <p style="color:var(--text-muted);font-size:14px;">加载中</p>
         </div>
-        <div class="login-page" v-else-if="!isLoggedIn">
-            <div class="login-card">
-                <div class="login-header">
-                    <div class="login-icon">文</div>
-                    <h1 class="login-title">英语记录</h1>
-                    <p class="login-subtitle">每天进步一点点</p>
-                </div>
-                <div class="login-tabs">
-                    <div class="login-tab" :class="{ active: loginMode === 'login' }" @click="loginMode = 'login'">登录</div>
-                    <div class="login-tab" :class="{ active: loginMode === 'register' }" @click="loginMode = 'register'">注册</div>
-                </div>
-                <form @submit.prevent="handleAuth">
-                    <div class="form-group">
-                        <label class="form-label">用户名</label>
-                        <input class="form-input" v-model="username" placeholder="请输入用户名" required minlength="3">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">密码</label>
-                        <input class="form-input" type="password" v-model="password" placeholder="请输入密码" required minlength="6">
-                    </div>
-                    <button class="login-btn" type="submit" :disabled="isLoading">
-                        <span v-if="isLoading" class="loading-spinner"></span>
-                        {{ loginMode === 'login' ? '登 录' : '注 册' }}
-                    </button>
-                </form>
-                <div class="offline-hint">
-                    <p>无法连接服务器？</p>
-                    <button class="offline-btn" @click="useOfflineMode">使用离线模式</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="app-container" v-else>
-            <div class="app-header">
-                <h1>英语记录</h1>
-                <p>每天进步一点点</p>
-                <div class="user-bar">
-                    <span>{{ userInfo.username }}</span>
-                    <button class="logout-btn" @click="logout">退出</button>
-                </div>
-            </div>
-            
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="value">{{ stats.words }}</div>
-                    <div class="label">单词</div>
-                </div>
-                <div class="stat-card">
-                    <div class="value">{{ stats.phrases }}</div>
-                    <div class="label">词组</div>
-                </div>
-                <div class="stat-card">
-                    <div class="value">{{ stats.sentences }}</div>
-                    <div class="label">句式</div>
-                </div>
-            </div>
-            
-            <div class="section-block">
-                <div class="section-title">录入</div>
-                <div class="type-selector">
-                    <button class="type-btn" :class="{ active: currentType === 'auto' }" @click="currentType = 'auto'">自动</button>
-                    <button class="type-btn" :class="{ active: currentType === 'words' }" @click="currentType = 'words'">单词</button>
-                    <button class="type-btn" :class="{ active: currentType === 'phrases' }" @click="currentType = 'phrases'">词组</button>
-                    <button class="type-btn" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
-                </div>
-                <div class="input-wrapper">
-                    <input class="main-input" v-model="inputContent" placeholder="输入内容..." @keyup.enter="addRecord" @input="onInputChange">
-                    <button class="submit-btn" @click="addRecord" :disabled="isLoading">
-                        <span v-if="isLoading" class="loading-spinner"></span>
-                        {{ isLoading ? '查询' : '保存' }}
-                    </button>
-                </div>
-                <div class="auto-detect-hint" v-if="currentType === 'auto' && inputContent">识别为: {{ detectType(inputContent) }}</div>
-                <div class="pos-display" v-if="detectedPos.length > 0 && currentType === 'auto'">
-                    <span class="pos-label">词性:</span>
-                    <div class="pos-tags">
-                        <span v-for="pos in detectedPos" :key="pos" class="pos-tag" :class="pos.toLowerCase()">{{ pos }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section-block">
-                <div class="tabs">
-                    <div class="tab" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">历史</div>
-                    <div class="tab" :class="{ active: activeTab === 'total' }" @click="activeTab = 'total'">全部</div>
-                </div>
-                
-                <div v-if="activeTab === 'history'">
-                    <div class="search-bar">
-                        <input class="search-input" v-model="searchQuery" placeholder="搜索...">
-                    </div>
-                    <div class="filter-bar">
-                        <button class="filter-btn" :class="{ active: filterType === 'all' }" @click="filterType = 'all'">全部</button>
-                        <button class="filter-btn" :class="{ active: filterType === 'words' }" @click="filterType = 'words'">单词</button>
-                        <button class="filter-btn" :class="{ active: filterType === 'phrases' }" @click="filterType = 'phrases'">词组</button>
-                        <button class="filter-btn" :class="{ active: filterType === 'sentences' }" @click="filterType = 'sentences'">句式</button>
-                        <button class="order-btn" :class="{ active: sortOrder === 'desc' }" @click="toggleSort">
-                            {{ sortOrder === 'desc' ? '↓ 最新' : '↑ 最早' }}
-                        </button>
-                    </div>
-                    
-                    <div v-if="filteredHistory.length === 0" class="empty-state">
-                        <div class="icon">○</div>
-                        <p>暂无记录</p>
-                    </div>
-                    
-                    <div v-else>
-                        <div class="date-group" v-for="group in filteredHistory" :key="group.date">
-                            <div class="date-header">{{ group.date }}</div>
-                            <div class="category-section" v-if="group.words && group.words.length > 0">
-                                <div class="category-title">单词</div>
-                                <div class="item-list">
-                                    <div class="item-tag" v-for="item in group.words" :key="item.id" @click="showDetail(item)">
-                                        <div class="word-content">
-                                            {{ item.content }}
-                                            <span v-if="item.pos" class="word-pos">{{ item.pos }}</span>
-                                        </div>
-                                        <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="category-section" v-if="group.phrases && group.phrases.length > 0">
-                                <div class="category-title">词组</div>
-                                <div class="item-list">
-                                    <div class="item-tag" v-for="item in group.phrases" :key="item.id" @click="showDetail(item)">
-                                        {{ item.content }}
-                                        <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="category-section" v-if="group.sentences && group.sentences.length > 0">
-                                <div class="category-title">句式</div>
-                                <div class="item-list">
-                                    <div class="item-tag sentences" v-for="item in group.sentences" :key="item.id" @click="showDetail(item)">
-                                        {{ item.content }}
-                                        <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div v-else>
-                    <div v-if="totalWords.length === 0 && totalPhrases.length === 0 && totalSentences.length === 0" class="empty-state">
-                        <div class="icon">○</div>
-                        <p>暂无记录</p>
-                    </div>
-                    
-                    <div v-else>
-                        <div class="total-category" v-if="totalWords.length > 0">
-                            <div class="total-category-title">单词 · {{ totalWords.length }}</div>
-                            <div class="pos-group" v-for="(items, pos) in groupedWords" :key="pos">
-                                <div class="pos-group-title">{{ pos }}</div>
-                                <div class="item-list">
-                                    <div class="item-tag" v-for="item in items" :key="item.id" @click="showDetail(item)">
-                                        {{ item.content }}
-                                        <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="total-category" v-if="totalPhrases.length > 0">
-                            <div class="total-category-title">词组 · {{ totalPhrases.length }}</div>
-                            <div class="item-list">
-                                <div class="item-tag" v-for="item in totalPhrases" :key="item.id" @click="showDetail(item)">
-                                    {{ item.content }}
-                                    <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="total-category" v-if="totalSentences.length > 0">
-                            <div class="total-category-title">句式 · {{ totalSentences.length }}</div>
-                            <div class="item-list" style="flex-direction: column; gap: 12px;">
-                                <div class="item-tag sentences" v-for="item in totalSentences" :key="item.id" @click="showDetail(item)">
-                                    {{ item.content }}
-                                    <span class="delete-btn" @click.stop="deleteItem(item)">×</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="toolbar" v-if="isLoggedIn">
-            <div class="toolbar-inner">
-                <button class="toolbar-btn export" @click="exportData">
-                    <span>↑</span> 导出
-                </button>
-                <button class="toolbar-btn import" @click="triggerImport">
-                    <span>↓</span> 导入
-                </button>
-                <button class="toolbar-btn clear" @click="clearData">
-                    <span>×</span> 清空
-                </button>
-            </div>
-        </div>
-        
-        <input type="file" ref="fileInput" @change="importData" accept=".json" style="display: none;">
-        
-        <transition name="fade">
-            <div class="toast" v-if="toast.show" :class="toast.type">{{ toast.message }}</div>
-        </transition>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <script src="https://unpkg.com/element-plus"></script>
-    <script>
-        const { createApp, ref, computed, onMounted, watch } = Vue;
-        
-        createApp({
-            setup() {
-                const isInitialized = ref(false);
-                const isLoggedIn = ref(false);
-                const loginMode = ref('login');
-                const username = ref('');
-                const password = ref('');
-                const isLoading = ref(false);
-                const userInfo = ref({ username: '' });
-                const isOfflineMode = ref(false);
-                
-                const records = ref([]);
-                const currentType = ref('auto');
-                const inputContent = ref('');
-                const detectedPos = ref([]);
-                const activeTab = ref('history');
-                const searchQuery = ref('');
-                const filterType = ref('all');
-                const sortOrder = ref('desc');
-                const toast = ref({ show: false, message: '', type: 'success' });
-                const fileInput = ref(null);
-                
-                const stats = computed(() => {
-                    const words = records.value.filter(r => r.type === 'words').length;
-                    const phrases = records.value.filter(r => r.type === 'phrases').length;
-                    const sentences = records.value.filter(r => r.type === 'sentences').length;
-                    return { words, phrases, sentences };
-                });
-                
-                const detectType = (text) => {
-                    if (!text) return '';
-                    const wordCount = text.trim().split(/\s+/).length;
-                    if (wordCount === 1) return '单词';
-                    if (wordCount <= 5 && !text.includes('.')) return '词组';
-                    return '句式';
-                };
-                
-                const onInputChange = async () => {
-                    if (currentType.value !== 'auto' || !inputContent.value.trim()) {
-                        detectedPos.value = [];
-                        return;
-                    }
-                    
-                    const text = inputContent.value.trim();
-                    if (text.split(/\s+/).length === 1) {
-                        try {
-                            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`);
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data[0] && data[0].meanings) {
-                                    detectedPos.value = [...new Set(data[0].meanings.map(m => m.partOfSpeech))];
-                                }
-                            }
-                        } catch (e) {
-                            detectedPos.value = [];
-                        }
-                    }
-                };
-                
-                const formatDate = (dateStr) => {
-                    const date = new Date(dateStr);
-                    const today = new Date();
-                    const yesterday = new Date(today);
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    
-                    if (date.toDateString() === today.toDateString()) return '今天';
-                    if (date.toDateString() === yesterday.toDateString()) return '昨天';
-                    return date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
-                };
-                
-                const filteredHistory = computed(() => {
-                    let items = [...records.value];
-                    
-                    if (searchQuery.value) {
-                        const query = searchQuery.value.toLowerCase();
-                        items = items.filter(r => r.content.toLowerCase().includes(query));
-                    }
-                    
-                    if (filterType.value !== 'all') {
-                        items = items.filter(r => r.type === filterType.value);
-                    }
-                    
-                    items.sort((a, b) => {
-                        const dateA = new Date(a.createdAt);
-                        const dateB = new Date(b.createdAt);
-                        return sortOrder.value === 'desc' ? dateB - dateA : dateA - dateB;
-                    });
-                    
-                    const groups = {};
-                    items.forEach(item => {
-                        const date = new Date(item.createdAt).toDateString();
-                        if (!groups[date]) {
-                            groups[date] = {
-                                date: formatDate(item.createdAt),
-                                words: [],
-                                phrases: [],
-                                sentences: []
-                            };
-                        }
-                        groups[date][item.type].push(item);
-                    });
-                    
-                    return Object.values(groups);
-                });
-                
-                const totalWords = computed(() => records.value.filter(r => r.type === 'words'));
-                const totalPhrases = computed(() => records.value.filter(r => r.type === 'phrases'));
-                const totalSentences = computed(() => records.value.filter(r => r.type === 'sentences'));
-                
-                const groupedWords = computed(() => {
-                    const groups = {};
-                    totalWords.value.forEach(item => {
-                        const pos = item.pos || '其他';
-                        if (!groups[pos]) groups[pos] = [];
-                        groups[pos].push(item);
-                    });
-                    return groups;
-                });
-                
-                const toggleSort = () => {
-                    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc';
-                };
-                
-                const showToast = (message, type = 'success') => {
-                    toast.value = { show: true, message, type };
-                    setTimeout(() => {
-                        toast.value.show = false;
-                    }, 2000);
-                };
-                
-                const handleAuth = async () => {
-                    if (!username.value || !password.value) return;
-                    
-                    isLoading.value = true;
-                    
-                    try {
-                        const endpoint = loginMode.value === 'login' ? '/api/login' : '/api/register';
-                        const response = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: username.value, password: password.value })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            localStorage.setItem('token', data.token);
-                            userInfo.value = { username: username.value };
-                            isLoggedIn.value = true;
-                            await loadRecords();
-                            showToast(loginMode.value === 'login' ? '登录成功' : '注册成功');
-                        } else {
-                            showToast(data.error || '操作失败', 'error');
-                        }
-                    } catch (e) {
-                        showToast('网络错误，请检查连接', 'error');
-                    } finally {
-                        isLoading.value = false;
-                    }
-                };
-                
-                const useOfflineMode = () => {
-                    isOfflineMode.value = true;
-                    userInfo.value = { username: '离线用户' };
-                    isLoggedIn.value = true;
-                    const saved = localStorage.getItem('offline_records');
-                    if (saved) {
-                        records.value = JSON.parse(saved);
-                    }
-                    showToast('已进入离线模式');
-                };
-                
-                const logout = () => {
-                    localStorage.removeItem('token');
-                    isLoggedIn.value = false;
-                    isOfflineMode.value = false;
-                    records.value = [];
-                    username.value = '';
-                    password.value = '';
-                };
-                
-                const loadRecords = async () => {
-                    if (isOfflineMode.value) return;
-                    
-                    try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch('/api/records', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        
-                        if (response.ok) {
-                            records.value = await response.json();
-                        }
-                    } catch (e) {
-                        console.error('加载记录失败:', e);
-                    }
-                };
-                
-                const addRecord = async () => {
-                    if (!inputContent.value.trim()) return;
-                    
-                    isLoading.value = true;
-                    
-                    let type = currentType.value;
-                    if (type === 'auto') {
-                        const wordCount = inputContent.value.trim().split(/\s+/).length;
-                        if (wordCount === 1) type = 'words';
-                        else if (wordCount <= 5 && !inputContent.value.includes('.')) type = 'phrases';
-                        else type = 'sentences';
-                    }
-                    
-                    const newRecord = {
-                        id: Date.now(),
-                        type,
-                        content: inputContent.value.trim(),
-                        pos: detectedPos.value.length > 0 ? detectedPos.value[0] : null,
-                        createdAt: new Date().toISOString()
-                    };
-                    
-                    if (isOfflineMode.value) {
-                        records.value.unshift(newRecord);
-                        localStorage.setItem('offline_records', JSON.stringify(records.value));
-                        inputContent.value = '';
-                        detectedPos.value = [];
-                        showToast('保存成功');
-                    } else {
-                        try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch('/api/records', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify(newRecord)
-                            });
-                            
-                            if (response.ok) {
-                                records.value.unshift(newRecord);
-                                inputContent.value = '';
-                                detectedPos.value = [];
-                                showToast('保存成功');
-                            } else {
-                                showToast('保存失败', 'error');
-                            }
-                        } catch (e) {
-                            showToast('网络错误', 'error');
-                        }
-                    }
-                    
-                    isLoading.value = false;
-                };
-                
-                const deleteItem = async (item) => {
-                    if (isOfflineMode.value) {
-                        records.value = records.value.filter(r => r.id !== item.id);
-                        localStorage.setItem('offline_records', JSON.stringify(records.value));
-                        showToast('删除成功');
-                    } else {
-                        try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch(`/api/records/${item.id}`, {
-                                method: 'DELETE',
-                                headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            
-                            if (response.ok) {
-                                records.value = records.value.filter(r => r.id !== item.id);
-                                showToast('删除成功');
-                            }
-                        } catch (e) {
-                            showToast('删除失败', 'error');
-                        }
-                    }
-                };
-                
-                const showDetail = (item) => {
-                    alert(item.content);
-                };
-                
-                const exportData = () => {
-                    const data = JSON.stringify(records.value, null, 2);
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `english-records-${new Date().toISOString().split('T')[0]}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('导出成功');
-                };
-                
-                const triggerImport = () => {
-                    fileInput.value.click();
-                };
-                
-                const importData = (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        try {
-                            const imported = JSON.parse(event.target.result);
-                            records.value = [...imported, ...records.value];
-                            
-                            if (isOfflineMode.value) {
-                                localStorage.setItem('offline_records', JSON.stringify(records.value));
-                            }
-                            
-                            showToast('导入成功');
-                        } catch (err) {
-                            showToast('导入失败，文件格式错误', 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                    e.target.value = '';
-                };
-                
-                const clearData = () => {
-                    if (confirm('确定要清空所有记录吗？此操作不可恢复。')) {
-                        records.value = [];
-                        if (isOfflineMode.value) {
-                            localStorage.removeItem('offline_records');
-                        }
-                        showToast('已清空');
-                    }
-                };
-                
-                const checkAuth = async () => {
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        isInitialized.value = true;
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch('/api/verify', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            userInfo.value = { username: data.username };
-                            isLoggedIn.value = true;
-                            await loadRecords();
-                        }
-                    } catch (e) {
-                        console.error('验证失败:', e);
-                    }
-                    
-                    isInitialized.value = true;
-                };
-                
-                onMounted(() => {
-                    checkAuth();
-                });
-                
-                return {
-                    isInitialized,
-                    isLoggedIn,
-                    loginMode,
-                    username,
-                    password,
-                    isLoading,
-                    userInfo,
-                    isOfflineMode,
-                    records,
-                    currentType,
-                    inputContent,
-                    detectedPos,
-                    activeTab,
-                    searchQuery,
-                    filterType,
-                    sortOrder,
-                    toast,
-                    fileInput,
-                    stats,
-                    detectType,
-                    onInputChange,
-                    filteredHistory,
-                    totalWords,
-                    totalPhrases,
-                    totalSentences,
-                    groupedWords,
-                    toggleSort,
-                    handleAuth,
-                    useOfflineMode,
-                    logout,
-                    addRecord,
-                    deleteItem,
-                    showDetail,
-                    exportData,
-                    triggerImport,
-                    importData,
-                    clearData
-                };
+    <div class="login-page" v-else-if="!isLoggedIn">
+        <div class="login-card">
+            <div class="login-logo">文</div>
+            <h1 class="login-title">英语记录</h1>
+            <p class="login-subtitle">每天进步一点点</p>
+            <div class="login-tabs">
+                <div class="login-tab" :class="{ active: loginMode === 'login' }" @click="loginMode = 'login'">登录</div>
+                <div class="login-tab" :class="{ active: loginMode === 'register' }" @click="loginMode = 'register'">注册</div>
+            </div>
+            <form @submit.prevent="handleAuth">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input class="form-input" v-model="username" placeholder="请输入用户名" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input class="form-input" type="password" v-model="password" placeholder="请输入密码" required minlength="6">
+                </div>
+                <button class="login-btn" type="submit" :disabled="isLoading">
+                    <span v-if="isLoading" class="spinner"></span>
+                    {{ loginMode === 'login' ? '登 录' : '注 册' }}
+                </button>
+            </form>
+            <div class="offline-hint">
+                <p>无法连接服务器？</p>
+                <button class="offline-btn" @click="useOfflineMode">离线模式</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app" v-else>
+        <div class="page" :class="{ active: currentPage === 'home' }">
+            <div class="header">
+                <div class="header-time">{{ todayDate }}</div>
+                <h1 class="header-title">英语记录</h1>
+                <p class="header-subtitle">每天进步一点点</p>
+                <div class="header-actions">
+                    <button class="header-btn" @click="toggleTheme">{{ isDarkMode ? '☀️ 亮色' : '🌙 暗色' }}</button>
+                    <button class="header-btn" @click="logout">退出</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-num">{{ stats.words }}</div><div class="stat-label">单词</div></div>
+                <div class="stat-card"><div class="stat-num">{{ stats.phrases }}</div><div class="stat-label">词组</div></div>
+                <div class="stat-card"><div class="stat-num">{{ stats.sentences }}</div><div class="stat-label">句式</div></div>
+            </div>
+
+            <div class="streak-banner" v-if="streakDays > 0 || !todayCheckedIn">
+                <div class="streak-num">{{ streakDays }}</div>
+                <div class="streak-label">连续学习天数</div>
+                <button class="checkin-btn" :class="{ done: todayCheckedIn }" @click="checkIn" :disabled="todayCheckedIn">
+                    {{ todayCheckedIn ? '✓ 今日已打卡' : '立即打卡' }}
+                </button>
+            </div>
+
+            <div class="section" v-if="weeklyStats.length > 0">
+                <div class="card chart-section">
+                    <div class="chart-title">本周学习统计</div>
+                    <div class="chart-bars">
+                        <div class="chart-col" v-for="(s, i) in weeklyStats" :key="i">
+                            <div class="chart-val">{{ s.count || '' }}</div>
+                            <div class="chart-bar" :style="{ height: Math.max((s.count || 0) * 4, 4) + 'px' }"></div>
+                            <div class="chart-day">{{ s.day }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="card input-section">
+                    <div class="type-pills">
+                        <button class="type-pill" :class="{ active: currentType === 'auto' }" @click="currentType = 'auto'">自动识别</button>
+                        <button class="type-pill" :class="{ active: currentType === 'words' }" @click="currentType = 'words'">单词</button>
+                        <button class="type-pill" :class="{ active: currentType === 'phrases' }" @click="currentType = 'phrases'">词组</button>
+                        <button class="type-pill" :class="{ active: currentType === 'sentences' }" @click="currentType = 'sentences'">句式</button>
+                    </div>
+                    <input class="input-box" v-model="inputContent" @input="onInputChange" placeholder="输入单词、词组或句子..." />
+                    <input class="input-box" v-model="inputMeaning" placeholder="输入中文含义（可选）" style="margin-bottom:12px;" />
+                    <div class="pos-tags" v-if="detectedPos.length > 0">
+                        <span class="pos-tag" v-for="p in detectedPos" :key="p">{{ p }}</span>
+                    </div>
+                    <p class="hint" v-if="currentType === 'auto' && inputContent">{{ detectType(inputContent) }}</p>
+                    <button class="submit-btn" @click="addRecord" :disabled="isLoading || !inputContent.trim()">
+                        <span v-if="isLoading" class="spinner"></span>
+                        保存记录
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" :class="{ active: currentPage === 'history' }">
+            <div class="header">
+                <h1 class="header-title">学习记录</h1>
+                <p class="header-subtitle">共 {{ stats.words + stats.phrases + stats.sentences }} 条积累</p>
+            </div>
+            <div class="search-section">
+                <input class="search-box" v-model="searchQuery" placeholder="搜索内容..." />
+            </div>
+            <div class="filter-section">
+                <span class="filter-chip" :class="{ active: filterType === 'all' }" @click="filterType = 'all'">全部</span>
+                <span class="filter-chip" :class="{ active: filterType === 'words' }" @click="filterType = 'words'">单词</span>
+                <span class="filter-chip" :class="{ active: filterType === 'phrases' }" @click="filterType = 'phrases'">词组</span>
+                <span class="filter-chip" :class="{ active: filterType === 'sentences' }" @click="filterType = 'sentences'">句式</span>
+                <button class="filter-action" @click="toggleSort">{{ sortOrder === 'desc' ? '最新' : '最早' }}</button>
+                <button class="filter-action" :class="{ active: batchMode }" @click="toggleBatchMode">{{ batchMode ? '取消' : '多选' }}</button>
+            </div>
+            <div class="record-list" :class="{ 'batch-mode': batchMode }">
+                <div v-if="filteredHistory.length === 0" class="empty">
+                    <div class="empty-icon">○</div>
+                    <div class="empty-text">暂无记录</div>
+                    <div class="empty-hint">回到首页开始添加</div>
+                </div>
+                <div v-else>
+                    <div class="record-group" v-for="group in filteredHistory" :key="group.date">
+                        <div class="record-date">{{ group.date }}</div>
+                        <div class="record-category" v-if="group.words?.length">
+                            <div class="category-label">单词</div>
+                            <div class="item-list">
+                                <span class="item word" v-for="item in group.words" :key="item.id" @click="batchMode ? toggleSelect(item.id) : showDetail(item)">
+                                    <span v-html="highlightText(item.content)"></span>
+                                    <span v-if="item.pos" class="item-pos">{{ item.pos }}</span>
+                                    <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                    <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                    <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                                    <span v-if="batchMode" class="batch-check" :class="{ selected: isSelected(item.id) }">✓</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="record-category" v-if="group.phrases?.length">
+                            <div class="category-label">词组</div>
+                            <div class="item-list">
+                                <span class="item phrase" v-for="item in group.phrases" :key="item.id" @click="batchMode ? toggleSelect(item.id) : showDetail(item)">
+                                    <span v-html="highlightText(item.content)"></span>
+                                    <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                    <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                    <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                                    <span v-if="batchMode" class="batch-check" :class="{ selected: isSelected(item.id) }">✓</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="record-category" v-if="group.sentences?.length">
+                            <div class="category-label">句式</div>
+                            <div class="item-list" style="flex-direction:column;">
+                                <span class="item sentence item-full" v-for="item in group.sentences" :key="item.id" @click="batchMode ? toggleSelect(item.id) : showDetail(item)">
+                                    <span v-html="highlightText(item.content.length > 60 ? item.content.substring(0,60)+'...' : item.content)"></span>
+                                    <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                    <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                    <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                                    <span v-if="batchMode" class="batch-check" :class="{ selected: isSelected(item.id) }">✓</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-if="batchMode && selectedIds.size > 0" class="batch-bar">
+                <span class="batch-info">已选择 {{ selectedIds.size }} 项</span>
+                <button class="batch-del-btn" @click="batchDelete">删除</button>
+            </div>
+            <div v-else class="float-actions">
+                <button class="float-btn" @click="exportData" title="导出">↑</button>
+                <button class="float-btn" @click="triggerImport" title="导入">↓</button>
+                <button class="float-btn danger" @click="clearData" title="清空">×</button>
+            </div>
+        </div>
+
+        <div class="page" :class="{ active: currentPage === 'total' }">
+            <div class="header">
+                <h1 class="header-title">词汇总览</h1>
+                <p class="header-subtitle">共 {{ stats.words + stats.phrases + stats.sentences }} 条积累</p>
+            </div>
+            <div class="total-section">
+                <div v-if="!totalWords.length && !totalPhrases.length && !totalSentences.length" class="empty">
+                    <div class="empty-icon">○</div>
+                    <div class="empty-text">词库还是空的</div>
+                    <div class="empty-hint">回到首页开始记录</div>
+                </div>
+                <div v-else>
+                    <div class="total-group" v-if="totalWords.length">
+                        <div class="total-title">单词 · {{ totalWords.length }}</div>
+                        <div class="pos-section" v-for="(items, pos) in groupedWords" :key="pos">
+                            <div class="pos-title">{{ pos }}</div>
+                            <div class="item-list">
+                                <span class="item word" v-for="item in items" :key="item.id" @click="showDetail(item)">
+                                    {{ item.content }}
+                                    <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                    <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                    <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="total-group" v-if="totalPhrases.length">
+                        <div class="total-title">词组 · {{ totalPhrases.length }}</div>
+                        <div class="item-list">
+                            <span class="item phrase" v-for="item in totalPhrases" :key="item.id" @click="showDetail(item)">
+                                {{ item.content }}
+                                <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="total-group" v-if="totalSentences.length">
+                        <div class="total-title">句式 · {{ totalSentences.length }}</div>
+                        <div class="item-list" style="flex-direction:column;">
+                            <span class="item sentence item-full" v-for="item in totalSentences" :key="item.id" @click="showDetail(item)">
+                                {{ item.content }}
+                                <span class="item-action" @click.stop="speak(item.content)">🔊</span>
+                                <span class="item-action fav" :class="{ active: isFavorite(item.id) }" @click.stop="toggleFavorite(item.id)">★</span>
+                                <span class="item-delete" @click.stop="deleteItem(item)">×</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" :class="{ active: currentPage === 'recite' }">
+            <div class="header">
+                <h1 class="header-title">背诵模式</h1>
+                <p class="header-subtitle">巩固记忆，温故知新</p>
+            </div>
+            <div class="filter-section">
+                <span class="filter-chip" :class="{ active: reciteFilter === 'all' }" @click="setReciteFilter('all')">全部</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'words' }" @click="setReciteFilter('words')">单词</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'phrases' }" @click="setReciteFilter('phrases')">词组</span>
+                <span class="filter-chip" :class="{ active: reciteFilter === 'sentences' }" @click="setReciteFilter('sentences')">句式</span>
+                <button class="filter-action" :class="{ active: isShuffled }" @click="toggleShuffle">{{ isShuffled ? '乱序' : '顺序' }}</button>
+            </div>
+            <div class="recite-section">
+                <div v-if="!reciteItems.length" class="empty">
+                    <div class="empty-icon">○</div>
+                    <div class="empty-text">暂无内容</div>
+                    <div class="empty-hint">先去录入一些词汇</div>
+                </div>
+                <div v-else class="recite-card">
+                    <div class="recite-item" v-for="item in reciteItems" :key="item.id">
+                        <div class="recite-english">{{ item.content }}</div>
+                        <div class="recite-meaning" :class="{ blur: !revealedIds.has(item.id) }">
+                            {{ item.meaning || '暂无释义' }}
+                        </div>
+                        <div class="recite-actions">
+                            <button class="reveal-btn" :class="{ on: revealedIds.has(item.id) }" @click="toggleReveal(item.id)">
+                                {{ revealedIds.has(item.id) ? '隐藏释义' : '显示释义' }}
+                            </button>
+                            <span class="recite-badge" :class="item.type">{{ {words:'单词',phrases:'词组',sentences:'句式'}[item.type] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" :class="{ active: currentPage === 'home' }" @click="currentPage = 'home'">
+                <span class="nav-icon">✎</span>
+                <span class="nav-label">录入</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'history' }" @click="currentPage = 'history'">
+                <span class="nav-icon">⏱</span>
+                <span class="nav-label">历史</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'total' }" @click="currentPage = 'total'">
+                <span class="nav-icon">⬚</span>
+                <span class="nav-label">全部</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'recite' }" @click="currentPage = 'recite'">
+                <span class="nav-icon">◉</span>
+                <span class="nav-label">背诵</span>
+            </div>
+        </div>
+
+        <div class="modal" v-if="showModal" @click.self="showModal = false">
+            <div class="modal-box">
+                <div class="modal-head">
+                    <span class="modal-title">详情</span>
+                    <button class="modal-close" @click="showModal = false">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-english">{{ modalItem.content }}</div>
+                    <div class="modal-label">中文释义</div>
+                    <div v-if="editingId === modalItem.id">
+                        <input class="edit-input" v-model="editMeaning" @keyup.enter="saveEdit(modalItem)" placeholder="输入中文释义..." />
+                    </div>
+                    <div v-else class="modal-meaning">{{ modalItem.meaning || '暂无释义' }}</div>
+                </div>
+                <div class="modal-tags" v-if="modalItem.pos || modalItem.type">
+                    <span v-if="modalItem.pos" class="modal-tag">{{ modalItem.pos }}</span>
+                    <span v-if="modalItem.type" class="modal-tag">{{ {words:'单词',phrases:'词组',sentences:'句式'}[modalItem.type] }}</span>
+                </div>
+                <div class="modal-btns">
+                    <button class="modal-btn secondary" @click="speak(modalItem.content)">🔊 朗读</button>
+                    <button class="modal-btn" :class="isFavorite(modalItem.id) ? 'primary' : 'secondary'" @click="toggleFavorite(modalItem.id)">{{ isFavorite(modalItem.id) ? '★ 已收藏' : '☆ 收藏' }}</button>
+                    <button class="modal-btn secondary" v-if="editingId !== modalItem.id" @click="startEdit(modalItem)">编辑释义</button>
+                    <template v-else>
+                        <button class="modal-btn primary" @click="saveEdit(modalItem)">保存</button>
+                        <button class="modal-btn secondary" @click="cancelEdit">取消</button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" ref="fileInput" @change="importData" accept=".json" style="display:none;">
+    <div class="toast" v-if="toast.show" :class="toast.type">{{ toast.message }}</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+createApp({
+    setup() {
+        const isInitialized = ref(false);
+        const isLoggedIn = ref(false);
+        const loginMode = ref('login');
+        const username = ref('');
+        const password = ref('');
+        const userInfo = ref({ username: '' });
+        const isOfflineMode = ref(false);
+
+        const currentPage = ref('home');
+        const isLoading = ref(false);
+        const records = ref([]);
+        const currentType = ref('auto');
+        const inputContent = ref('');
+        const inputMeaning = ref('');
+        const detectedPos = ref([]);
+        const searchQuery = ref('');
+        const filterType = ref('all');
+        const sortOrder = ref('desc');
+        const fileInput = ref(null);
+        const showModal = ref(false);
+        const modalItem = ref({});
+        const toast = ref({ show: false, message: '', type: 'success' });
+
+        const reciteFilter = ref('all');
+        const isShuffled = ref(false);
+        const revealedIds = ref(new Set());
+        const shuffledList = ref([]);
+
+        const isDarkMode = ref(false);
+        const editingId = ref(null);
+        const editMeaning = ref('');
+        const batchMode = ref(false);
+        const selectedIds = ref(new Set());
+        const favorites = ref(new Set());
+        const checkins = ref([]);
+
+        const setTimeTheme = () => {
+            const hour = new Date().getHours();
+            let time;
+            if (hour >= 6 && hour < 12) time = 'morning';
+            else if (hour >= 12 && hour < 18) time = 'afternoon';
+            else if (hour >= 18 && hour < 22) time = 'evening';
+            else time = 'night';
+            if (!isDarkMode.value) document.documentElement.setAttribute('data-time', time);
+        };
+
+        const todayDate = computed(() => {
+            const now = new Date();
+            const days = ['日','一','二','三','四','五','六'];
+            return `${now.getMonth()+1}月${now.getDate()}日 周${days[now.getDay()]}`;
+        });
+
+        const stats = computed(() => ({
+            words: records.value.filter(r => r.type === 'words').length,
+            phrases: records.value.filter(r => r.type === 'phrases').length,
+            sentences: records.value.filter(r => r.type === 'sentences').length,
+        }));
+
+        const weeklyStats = computed(() => {
+            const days = ['一','二','三','四','五','六','日'];
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            return days.map((day, i) => {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
+                return { day: '周' + day, count: records.value.filter(r => r.createdAt?.startsWith(dateStr)).length };
+            });
+        });
+
+        const streakDays = computed(() => {
+            if (!checkins.value.length) return 0;
+            const sorted = [...checkins.value].sort((a, b) => new Date(b) - new Date(a));
+            const today = new Date().toISOString().split('T')[0];
+            if (sorted[0] !== today) {
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                if (sorted[0] !== yesterday) return 0;
             }
-        }).mount('#app');
-    </script>
+            let streak = 1;
+            for (let i = 1; i < sorted.length; i++) {
+                if ((new Date(sorted[i-1]) - new Date(sorted[i])) / 86400000 === 1) streak++;
+                else break;
+            }
+            return streak;
+        });
+
+        const todayCheckedIn = computed(() => checkins.value.includes(new Date().toISOString().split('T')[0]));
+
+        const detectType = (text) => {
+            if (!text) return '';
+            const w = text.trim().split(/\s+/).length;
+            if (w === 1) return '识别为：单词';
+            if (w <= 5 && !text.includes('.')) return '识别为：词组';
+            return '识别为：句式';
+        };
+
+        const onInputChange = async () => {
+            if (currentType.value !== 'auto' || !inputContent.value.trim()) { detectedPos.value = []; return; }
+            const text = inputContent.value.trim();
+            if (text.split(/\s+/).length === 1) {
+                try {
+                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data[0]?.meanings) {
+                            detectedPos.value = [...new Set(data[0].meanings.map(m => m.partOfSpeech))];
+                            const definitions = data[0].meanings.flatMap(m => m.definitions?.slice(0,2).map(d => d.definition) || []);
+                            if (definitions.length > 0 && !inputMeaning.value.trim()) {
+                                inputMeaning.value = definitions.join('; ');
+                            }
+                        }
+                    }
+                } catch { detectedPos.value = []; }
+            } else detectedPos.value = [];
+        };
+
+        const formatDate = (dateStr) => {
+            const d = new Date(dateStr), today = new Date();
+            const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+            if (d.toDateString() === today.toDateString()) return '今天';
+            if (d.toDateString() === yest.toDateString()) return '昨天';
+            return d.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+        };
+
+        const highlightText = (text) => {
+            if (!searchQuery.value) return text;
+            return text.replace(new RegExp(`(${searchQuery.value})`, 'gi'), '<span class="highlight">$1</span>');
+        };
+
+        const filteredHistory = computed(() => {
+            let items = [...records.value];
+            if (searchQuery.value) items = items.filter(r => r.content.toLowerCase().includes(searchQuery.value.toLowerCase()));
+            if (filterType.value !== 'all') items = items.filter(r => r.type === filterType.value);
+            items.sort((a, b) => sortOrder.value === 'desc' ? new Date(b.createdAt) - new Date(a.createdAt) : new Date(a.createdAt) - new Date(b.createdAt));
+            const groups = {};
+            items.forEach(item => {
+                const key = new Date(item.createdAt).toDateString();
+                if (!groups[key]) groups[key] = { date: formatDate(item.createdAt), words: [], phrases: [], sentences: [] };
+                groups[key][item.type]?.push(item);
+            });
+            return Object.values(groups);
+        });
+
+        const totalWords = computed(() => records.value.filter(r => r.type === 'words'));
+        const totalPhrases = computed(() => records.value.filter(r => r.type === 'phrases'));
+        const totalSentences = computed(() => records.value.filter(r => r.type === 'sentences'));
+        const groupedWords = computed(() => {
+            const g = {};
+            totalWords.value.forEach(item => { const p = item.pos || '其他'; if (!g[p]) g[p] = []; g[p].push(item); });
+            return g;
+        });
+
+        const reciteItems = computed(() => {
+            let base = [...records.value];
+            if (reciteFilter.value !== 'all') base = base.filter(r => r.type === reciteFilter.value);
+            if (!isShuffled.value) return base.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return shuffledList.value.filter(r => reciteFilter.value === 'all' || r.type === reciteFilter.value);
+        });
+
+        const buildShuffledList = () => {
+            const arr = [...records.value];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            shuffledList.value = arr;
+        };
+
+        const toggleShuffle = () => { isShuffled.value = !isShuffled.value; if (isShuffled.value) buildShuffledList(); revealedIds.value = new Set(); };
+        const setReciteFilter = (f) => { reciteFilter.value = f; revealedIds.value = new Set(); };
+        const toggleReveal = (id) => { const next = new Set(revealedIds.value); next.has(id) ? next.delete(id) : next.add(id); revealedIds.value = next; };
+        const toggleSort = () => { sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'; };
+
+        const showToast = (message, type = 'success') => {
+            toast.value = { show: true, message, type };
+            setTimeout(() => { toast.value.show = false; }, 2000);
+        };
+
+        const toggleTheme = () => {
+            isDarkMode.value = !isDarkMode.value;
+            if (isDarkMode.value) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.removeAttribute('data-time');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                setTimeTheme();
+            }
+            localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light');
+        };
+
+        const speak = (text) => {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US'; u.rate = 0.9;
+                speechSynthesis.speak(u);
+            } else showToast('浏览器不支持语音', 'error');
+        };
+
+        const toggleFavorite = (id) => {
+            const next = new Set(favorites.value);
+            next.has(id) ? next.delete(id) : next.add(id);
+            favorites.value = next;
+            localStorage.setItem('favorites', JSON.stringify([...next]));
+        };
+
+        const isFavorite = (id) => favorites.value.has(id);
+
+        const checkIn = () => {
+            if (todayCheckedIn.value) return;
+            checkins.value.push(new Date().toISOString().split('T')[0]);
+            localStorage.setItem('checkins', JSON.stringify(checkins.value));
+            showToast('打卡成功！');
+        };
+
+        const startEdit = (item) => { editingId.value = item.id; editMeaning.value = item.meaning || ''; };
+        const saveEdit = async (item) => {
+            item.meaning = editMeaning.value.trim() || null;
+            editingId.value = null;
+            if (isOfflineMode.value) {
+                localStorage.setItem('offline_records', JSON.stringify(records.value));
+                showToast('修改成功');
+            } else {
+                try {
+                    const token = localStorage.getItem('token');
+                    await fetch(`/api/records/${item.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ meaning: item.meaning })
+                    });
+                    showToast('修改成功');
+                } catch { showToast('同步失败', 'error'); }
+            }
+        };
+        const cancelEdit = () => { editingId.value = null; editMeaning.value = ''; };
+
+        const toggleBatchMode = () => { batchMode.value = !batchMode.value; if (!batchMode.value) selectedIds.value = new Set(); };
+        const toggleSelect = (id) => { const next = new Set(selectedIds.value); next.has(id) ? next.delete(id) : next.add(id); selectedIds.value = next; };
+        const isSelected = (id) => selectedIds.value.has(id);
+        const batchDelete = () => {
+            if (!selectedIds.value.size) return;
+            if (!confirm(`删除选中的 ${selectedIds.value.size} 条记录？`)) return;
+            records.value = records.value.filter(r => !selectedIds.value.has(r.id));
+            selectedIds.value = new Set(); batchMode.value = false;
+            if (isOfflineMode.value) localStorage.setItem('offline_records', JSON.stringify(records.value));
+            showToast('删除成功');
+        };
+
+        const handleAuth = async () => {
+            if (!username.value || !password.value) return;
+            isLoading.value = true;
+            try {
+                const endpoint = loginMode.value === 'login' ? '/api/login' : '/api/register';
+                const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) });
+                const data = await res.json();
+                if (res.ok) { localStorage.setItem('token', data.access_token); userInfo.value = { username: data.user?.username || username.value }; isLoggedIn.value = true; await loadRecords(); showToast(loginMode.value === 'login' ? '登录成功' : '注册成功'); }
+                else showToast(data.error || '操作失败', 'error');
+            } catch { showToast('网络错误', 'error'); }
+            finally { isLoading.value = false; }
+        };
+
+        const useOfflineMode = () => {
+            isOfflineMode.value = true; userInfo.value = { username: '离线用户' }; isLoggedIn.value = true;
+            const saved = localStorage.getItem('offline_records');
+            if (saved) records.value = JSON.parse(saved);
+            showToast('已进入离线模式');
+        };
+
+        const logout = () => { localStorage.removeItem('token'); isLoggedIn.value = false; isOfflineMode.value = false; records.value = []; username.value = ''; password.value = ''; currentPage.value = 'home'; };
+
+        const loadRecords = async () => {
+            if (isOfflineMode.value) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/records', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) records.value = await res.json();
+            } catch (e) { console.error('加载失败:', e); }
+        };
+
+        const addRecord = async () => {
+            if (!inputContent.value.trim()) return;
+            isLoading.value = true;
+            let type = currentType.value;
+            if (type === 'auto') {
+                const wc = inputContent.value.trim().split(/\s+/).length;
+                type = wc === 1 ? 'words' : (wc <= 5 && !inputContent.value.includes('.')) ? 'phrases' : 'sentences';
+            }
+            const rec = { id: Date.now(), type, content: inputContent.value.trim(), meaning: inputMeaning.value.trim() || null, pos: detectedPos.value[0] || null, createdAt: new Date().toISOString() };
+            if (isOfflineMode.value) {
+                records.value.unshift(rec); localStorage.setItem('offline_records', JSON.stringify(records.value));
+                inputContent.value = ''; inputMeaning.value = ''; detectedPos.value = []; showToast('保存成功');
+            } else {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch('/api/records', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(rec) });
+                    if (res.ok) { records.value.unshift(rec); inputContent.value = ''; inputMeaning.value = ''; detectedPos.value = []; showToast('保存成功'); }
+                    else showToast('保存失败', 'error');
+                } catch { showToast('网络错误', 'error'); }
+            }
+            isLoading.value = false;
+        };
+
+        const deleteItem = async (item) => {
+            if (isOfflineMode.value) {
+                records.value = records.value.filter(r => r.id !== item.id);
+                localStorage.setItem('offline_records', JSON.stringify(records.value)); showToast('删除成功');
+            } else {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`/api/records/${item.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                    if (res.ok) { records.value = records.value.filter(r => r.id !== item.id); showToast('删除成功'); }
+                } catch { showToast('删除失败', 'error'); }
+            }
+        };
+
+        const showDetail = (item) => { modalItem.value = item; showModal.value = true; };
+
+        const exportData = () => {
+            const blob = new Blob([JSON.stringify(records.value, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `english-records-${new Date().toISOString().split('T')[0]}.json`;
+            a.click(); URL.revokeObjectURL(url); showToast('导出成功');
+        };
+
+        const triggerImport = () => { fileInput.value.click(); };
+
+        const importData = (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    records.value = [...imported, ...records.value];
+                    if (isOfflineMode.value) localStorage.setItem('offline_records', JSON.stringify(records.value));
+                    showToast('导入成功');
+                } catch { showToast('导入失败', 'error'); }
+            };
+            reader.readAsText(file); e.target.value = '';
+        };
+
+        const clearData = () => {
+            if (confirm('确定清空所有记录？')) {
+                records.value = [];
+                if (isOfflineMode.value) localStorage.removeItem('offline_records');
+                showToast('已清空');
+            }
+        };
+
+        const checkAuth = async () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') { isDarkMode.value = true; document.documentElement.setAttribute('data-theme', 'dark'); }
+            else setTimeTheme();
+            const savedFavorites = localStorage.getItem('favorites');
+            if (savedFavorites) favorites.value = new Set(JSON.parse(savedFavorites));
+            const savedCheckins = localStorage.getItem('checkins');
+            if (savedCheckins) checkins.value = JSON.parse(savedCheckins);
+
+            const token = localStorage.getItem('token');
+            if (!token) { isInitialized.value = true; return; }
+            try {
+                const res = await fetch('/api/verify', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) { const data = await res.json(); userInfo.value = { username: data.username }; isLoggedIn.value = true; await loadRecords(); }
+            } catch (e) { console.error('验证失败:', e); }
+            isInitialized.value = true;
+        };
+
+        onMounted(() => { checkAuth(); });
+
+        return {
+            isInitialized, isLoggedIn, loginMode, username, password, userInfo, isOfflineMode,
+            currentPage, isLoading, records, currentType, inputContent, inputMeaning, detectedPos,
+            searchQuery, filterType, sortOrder, fileInput, showModal, modalItem, toast,
+            reciteFilter, isShuffled, revealedIds, shuffledList,
+            isDarkMode, editingId, editMeaning, batchMode, selectedIds, favorites, checkins,
+            todayDate, stats, weeklyStats, streakDays, todayCheckedIn,
+            detectType, onInputChange, highlightText, filteredHistory,
+            totalWords, totalPhrases, totalSentences, groupedWords, reciteItems,
+            toggleShuffle, setReciteFilter, toggleReveal, toggleSort,
+            showToast, toggleTheme, speak, toggleFavorite, isFavorite, checkIn,
+            startEdit, saveEdit, cancelEdit,
+            toggleBatchMode, toggleSelect, isSelected, batchDelete,
+            handleAuth, useOfflineMode, logout, loadRecords, addRecord, deleteItem,
+            showDetail, exportData, triggerImport, importData, clearData,
+        };
+    }
+}).mount('#app');
+</script>
 </body>
 </html>

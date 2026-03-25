@@ -45,8 +45,7 @@ def init_db():
             type TEXT NOT NULL,
             content TEXT NOT NULL,
             pos TEXT,
-            definition_en TEXT,
-            definition_zh TEXT,
+            meaning TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -127,28 +126,24 @@ def get_records():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, date, type, content, pos, definition_en, definition_zh, created_at 
+        SELECT id, date, type, content, pos, meaning, created_at 
         FROM records 
         WHERE user_id = ? 
-        ORDER BY date DESC, created_at DESC
+        ORDER BY created_at DESC
     ''', (user_id,))
     rows = cursor.fetchall()
     conn.close()
     
-    records = {}
+    records = []
     for row in rows:
-        date = row['date']
-        if date not in records:
-            records[date] = {'words': [], 'phrases': [], 'sentences': []}
-        
-        item = {
+        records.append({
             'id': row['id'],
-            'text': row['content'],
+            'type': row['type'],
+            'content': row['content'],
             'pos': row['pos'],
-            'definition_en': row['definition_en'],
-            'definition_zh': row['definition_zh']
-        }
-        records[date][row['type']].append(item)
+            'meaning': row['meaning'],
+            'createdAt': row['created_at']
+        })
     
     return jsonify(records)
 
@@ -161,8 +156,7 @@ def add_record():
     content = data.get('content', '').strip()
     record_type = data.get('type', 'words')
     pos = data.get('pos', None)
-    definition_en = data.get('definition_en', None)
-    definition_zh = data.get('definition_zh', None)
+    meaning = data.get('meaning', None)
     
     if not content:
         return jsonify({'error': '内容不能为空'}), 400
@@ -175,9 +169,9 @@ def add_record():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO records (user_id, date, type, content, pos, definition_en, definition_zh) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (user_id, today, record_type, content, pos, definition_en, definition_zh))
+        INSERT INTO records (user_id, date, type, content, pos, meaning) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (user_id, today, record_type, content, pos, meaning))
     conn.commit()
     record_id = cursor.lastrowid
     conn.close()
@@ -186,12 +180,10 @@ def add_record():
         'message': '添加成功',
         'record': {
             'id': record_id,
-            'date': today,
             'type': record_type,
-            'text': content,
+            'content': content,
             'pos': pos,
-            'definition_en': definition_en,
-            'definition_zh': definition_zh
+            'meaning': meaning
         }
     }), 201
 
@@ -214,12 +206,9 @@ def update_record(record_id):
     if 'pos' in data:
         update_fields.append('pos = ?')
         update_values.append(data['pos'])
-    if 'definition_en' in data:
-        update_fields.append('definition_en = ?')
-        update_values.append(data['definition_en'])
-    if 'definition_zh' in data:
-        update_fields.append('definition_zh = ?')
-        update_values.append(data['definition_zh'])
+    if 'meaning' in data:
+        update_fields.append('meaning = ?')
+        update_values.append(data['meaning'])
     
     if update_fields:
         update_values.append(record_id)
