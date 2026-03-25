@@ -242,21 +242,21 @@ def get_users():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT u.id, u.username, u.is_admin, u.created_at,
-                   COUNT(r.id) as record_count
-            FROM users u LEFT JOIN records r ON u.id = r.user_id
-            GROUP BY u.id ORDER BY u.created_at DESC
+            SELECT u.id, u.username, u.is_admin, u.created_at
+            FROM users u ORDER BY u.created_at DESC
         ''')
         rows = cursor.fetchall()
         
         users = []
         for row in rows:
+            cursor.execute('SELECT COUNT(*) FROM records WHERE user_id = %s', (row[0],))
+            record_count = cursor.fetchone()[0]
             users.append({
                 'id': row[0],
                 'username': row[1],
                 'is_admin': row[2] or False,
                 'created_at': row[3].isoformat() if row[3] else None,
-                'record_count': row[4]
+                'record_count': record_count
             })
         return jsonify(users)
     except Exception as e:
