@@ -5,40 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#f5f0e6">
+    <meta name="theme-color" content="#fefefe">
     <title>英语每日记录</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         :root {
-            --bg-gradient: linear-gradient(135deg, #f5f0e6 0%, #ebe3d5 100%);
-            --bg-card: rgba(255,252,245,0.95);
-            --text-primary: #5c4a3d;
-            --text-secondary: #7a6655;
-            --text-muted: #a89888;
+            --bg-gradient: linear-gradient(135deg, #fefefe 0%, #f8f6f2 100%);
+            --bg-card: rgba(255,255,255,0.98);
+            --text-primary: #4a4a4a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
             --accent: #b8956c;
-            --accent-light: rgba(184,149,108,0.15);
-            --shadow: 0 8px 32px rgba(92,74,61,0.1);
-            --shadow-lg: 0 20px 60px rgba(92,74,61,0.15);
+            --accent-light: rgba(184,149,108,0.12);
+            --shadow: 0 8px 32px rgba(0,0,0,0.06);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.08);
             --brown-light: #d4c4b0;
             --brown-medium: #b8956c;
             --brown-dark: #8b7355;
         }
 
-        [data-time="morning"] { --bg-gradient: linear-gradient(135deg, #faf6ef 0%, #f0e8d8 100%); }
-        [data-time="afternoon"] { --bg-gradient: linear-gradient(135deg, #f5f0e6 0%, #ebe3d5 100%); }
-        [data-time="evening"] { --bg-gradient: linear-gradient(135deg, #f0e8d8 0%, #e5dcc8 100%); }
-        [data-time="night"] { --bg-gradient: linear-gradient(135deg, #e8e0d0 0%, #ddd3c0 100%); }
+        [data-time="morning"] { --bg-gradient: linear-gradient(135deg, #ffffff 0%, #faf9f6 100%); }
+        [data-time="afternoon"] { --bg-gradient: linear-gradient(135deg, #fefefe 0%, #f8f6f2 100%); }
+        [data-time="evening"] { --bg-gradient: linear-gradient(135deg, #faf9f6 0%, #f5f3ef 100%); }
+        [data-time="night"] { --bg-gradient: linear-gradient(135deg, #f5f3ef 0%, #f0ede8 100%); }
 
         [data-theme="dark"] { 
-            --bg-gradient: linear-gradient(135deg, #3d3530 0%, #2d2820 100%); 
-            --bg-card: rgba(45,40,32,0.95); 
-            --text-primary: #e8e0d0; 
-            --text-secondary: #c4b8a8; 
-            --text-muted: #8a8070; 
+            --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); 
+            --bg-card: rgba(20,20,20,0.98); 
+            --text-primary: #f0f0f0; 
+            --text-secondary: #c0c0c0; 
+            --text-muted: #707070; 
             --accent: #d4a574;
-            --accent-light: rgba(212,165,116,0.2);
+            --accent-light: rgba(212,165,116,0.15);
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.4);
         }
 
         html, body {

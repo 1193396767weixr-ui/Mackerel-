@@ -53,12 +53,24 @@ def init_db():
                 type TEXT NOT NULL,
                 content TEXT NOT NULL,
                 pos TEXT,
-                definition_en TEXT,
-                definition_zh TEXT,
+                meaning TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        try:
+            cursor.execute('ALTER TABLE records ADD COLUMN IF NOT EXISTS meaning TEXT')
+        except:
+            pass
+        
+        try:
+            cursor.execute('''
+                UPDATE records SET meaning = COALESCE(definition_en, '') || ' ' || COALESCE(definition_zh, '')
+                WHERE meaning IS NULL AND (definition_en IS NOT NULL OR definition_zh IS NOT NULL)
+            ''')
+        except:
+            pass
         
         conn.commit()
         conn.close()
@@ -172,27 +184,23 @@ def get_records():
         conn = get_db()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute('''
-            SELECT id, date, type, content, pos, definition_en, definition_zh, created_at 
+            SELECT id, type, content, pos, meaning, created_at 
             FROM records 
             WHERE user_id = %s 
-            ORDER BY date DESC, created_at DESC
+            ORDER BY created_at DESC
         ''', (user_id,))
         rows = cursor.fetchall()
         
-        records = {}
+        records = []
         for row in rows:
-            date = row['date']
-            if date not in records:
-                records[date] = {'words': [], 'phrases': [], 'sentences': []}
-            
-            item = {
+            records.append({
                 'id': row['id'],
-                'text': row['content'],
+                'type': row['type'],
+                'content': row['content'],
                 'pos': row['pos'],
-                'definition_en': row['definition_en'],
-                'definition_zh': row['definition_zh']
-            }
-            records[date][row['type']].append(item)
+                'meaning': row['meaning'],
+                'createdAt': row['created_at'].isoformat() if row['created_at'] else None
+            })
         
         return jsonify(records)
     except Exception as e:
@@ -215,8 +223,7 @@ def add_record():
     content = data.get('content', '').strip()
     record_type = data.get('type', 'words')
     pos = data.get('pos', None)
-    definition_en = data.get('definition_en', None)
-    definition_zh = data.get('definition_zh', None)
+    meaning = data.get('meaning', None)
     
     if not content:
         return jsonify({'error': '内容不能为空'}), 400
@@ -231,9 +238,9 @@ def add_record():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO records (user_id, date, type, content, pos, definition_en, definition_zh) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
-        ''', (user_id, today, record_type, content, pos, definition_en, definition_zh))
+            INSERT INTO records (user_id, date, type, content, pos, meaning) 
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+        ''', (user_id, today, record_type, content, pos, meaning))
         record_id = cursor.fetchone()[0]
         conn.commit()
         
@@ -241,12 +248,10 @@ def add_record():
             'message': '添加成功',
             'record': {
                 'id': record_id,
-                'date': today,
                 'type': record_type,
-                'text': content,
+                'content': content,
                 'pos': pos,
-                'definition_en': definition_en,
-                'definition_zh': definition_zh
+                'meaning': meaning
             }
         }), 201
     except Exception as e:
@@ -282,12 +287,9 @@ def update_record(record_id):
         if 'pos' in data:
             update_fields.append('pos = %s')
             update_values.append(data['pos'])
-        if 'definition_en' in data:
-            update_fields.append('definition_en = %s')
-            update_values.append(data['definition_en'])
-        if 'definition_zh' in data:
-            update_fields.append('definition_zh = %s')
-            update_values.append(data['definition_zh'])
+        if 'meaning' in data:
+            update_fields.append('meaning = %s')
+            update_values.append(data['meaning'])
         
         if update_fields:
             update_values.append(record_id)
@@ -468,27 +470,23 @@ def export_records():
         conn = get_db()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute('''
-            SELECT id, date, type, content, pos, definition_en, definition_zh, created_at 
+            SELECT id, type, content, pos, meaning, created_at 
             FROM records 
             WHERE user_id = %s 
-            ORDER BY date DESC, created_at DESC
+            ORDER BY created_at DESC
         ''', (user_id,))
         rows = cursor.fetchall()
         
-        records = {}
+        records = []
         for row in rows:
-            date = row['date']
-            if date not in records:
-                records[date] = {'words': [], 'phrases': [], 'sentences': []}
-            
-            item = {
+            records.append({
                 'id': row['id'],
-                'text': row['content'],
+                'type': row['type'],
+                'content': row['content'],
                 'pos': row['pos'],
-                'definition_en': row['definition_en'],
-                'definition_zh': row['definition_zh']
-            }
-            records[date][row['type']].append(item)
+                'meaning': row['meaning'],
+                'createdAt': row['created_at'].isoformat() if row['created_at'] else None
+            })
         
         return jsonify(records)
     except Exception as e:
@@ -508,7 +506,7 @@ def import_records():
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
-    imported_records = data.get('records', {})
+    imported_records = data.get('records', [])
     count = 0
     
     conn = None
@@ -516,25 +514,28 @@ def import_records():
         conn = get_db()
         cursor = conn.cursor()
         
-        for date, items in imported_records.items():
-            for record_type in ['words', 'phrases', 'sentences']:
-                for item in items.get(record_type, []):
-                    text = item.get('text', item) if isinstance(item, dict) else item
-                    pos = item.get('pos', None) if isinstance(item, dict) else None
-                    definition_en = item.get('definition_en', None) if isinstance(item, dict) else None
-                    definition_zh = item.get('definition_zh', None) if isinstance(item, dict) else None
-                    
-                    cursor.execute('''
-                        SELECT id FROM records 
-                        WHERE user_id = %s AND date = %s AND type = %s AND content = %s
-                    ''', (user_id, date, record_type, text))
-                    
-                    if not cursor.fetchone():
-                        cursor.execute('''
-                            INSERT INTO records (user_id, date, type, content, pos, definition_en, definition_zh) 
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        ''', (user_id, date, record_type, text, pos, definition_en, definition_zh))
-                        count += 1
+        for item in imported_records:
+            content = item.get('content', '')
+            record_type = item.get('type', 'words')
+            pos = item.get('pos', None)
+            meaning = item.get('meaning', None)
+            
+            if not content:
+                continue
+            
+            today = datetime.now().strftime('%Y/%m/%d')
+            
+            cursor.execute('''
+                SELECT id FROM records 
+                WHERE user_id = %s AND content = %s
+            ''', (user_id, content))
+            
+            if not cursor.fetchone():
+                cursor.execute('''
+                    INSERT INTO records (user_id, date, type, content, pos, meaning) 
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                ''', (user_id, today, record_type, content, pos, meaning))
+                count += 1
         
         conn.commit()
         return jsonify({'message': f'成功导入 {count} 条记录'})
