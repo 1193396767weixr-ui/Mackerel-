@@ -304,6 +304,14 @@
         .input-box::placeholder { color: var(--text-muted); }
         .meaning-row { display: flex; gap: 10px; margin-bottom: 16px; }
         .meaning-row .input-box { margin-bottom: 0; }
+        .meaning-btns { display: flex; gap: 8px; }
+        .lang-toggle {
+            padding: 0 14px; background: transparent;
+            color: var(--accent); border: 2px solid var(--accent);
+            border-radius: 14px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; min-width: 45px;
+        }
+        .lang-toggle:hover { background: var(--accent-light); }
         .fetch-meaning-btn {
             padding: 0 20px; background: var(--accent);
             color: white; border: none; border-radius: 14px;
@@ -846,11 +854,16 @@
                     </div>
                     <input class="input-box" v-model="inputContent" @input="onInputChange" placeholder="输入单词、词组或句子..." />
                     <div class="meaning-row">
-                        <input class="input-box" v-model="inputMeaning" placeholder="输入中文含义（可选）" style="flex:1;" />
-                        <button class="fetch-meaning-btn" @click="fetchMeaning" :disabled="isLoadingMeaning || !inputContent.trim()">
-                            <span v-if="isLoadingMeaning" class="spinner-small"></span>
-                            <span v-else>释义</span>
-                        </button>
+                        <input class="input-box" v-model="inputMeaning" :placeholder="meaningLang === 'zh' ? '输入中文含义（可选）' : '输入英文释义（可选）'" style="flex:1;" />
+                        <div class="meaning-btns">
+                            <button class="lang-toggle" @click="meaningLang = meaningLang === 'zh' ? 'en' : 'zh'">
+                                {{ meaningLang === 'zh' ? '中' : 'EN' }}
+                            </button>
+                            <button class="fetch-meaning-btn" @click="fetchMeaning" :disabled="isLoadingMeaning || !inputContent.trim()">
+                                <span v-if="isLoadingMeaning" class="spinner-small"></span>
+                                <span v-else>释义</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="pos-tags" v-if="detectedPos.length > 0">
                         <span class="pos-tag" v-for="p in detectedPos" :key="p">{{ p }}</span>
@@ -1171,6 +1184,7 @@ createApp({
         const currentPage = ref('home');
         const isLoading = ref(false);
         const isLoadingMeaning = ref(false);
+        const meaningLang = ref('zh');
         const records = ref([]);
         const currentType = ref('auto');
         const inputContent = ref('');
@@ -1290,32 +1304,58 @@ createApp({
             if (!inputContent.value.trim()) return;
             isLoadingMeaning.value = true;
             const text = inputContent.value.trim();
-            try {
-                const res = await fetch(`https://dict.youdao.com/suggest?num=5&doctype=json&q=${encodeURIComponent(text)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.data?.entries?.length > 0) {
-                        const meanings = data.data.entries
-                            .filter(e => e.explain && !e.explain.includes(text.toLowerCase()))
-                            .slice(0, 3)
-                            .map(e => e.explain);
-                        if (meanings.length > 0) {
-                            inputMeaning.value = meanings.join('; ');
-                            const firstExplain = data.data.entries[0].explain;
-                            const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
-                            if (posMatch) {
-                                detectedPos.value = [posMatch[1].toLowerCase()];
+            
+            if (meaningLang.value === 'zh') {
+                try {
+                    const res = await fetch(`https://dict.youdao.com/suggest?num=5&doctype=json&q=${encodeURIComponent(text)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.data?.entries?.length > 0) {
+                            const meanings = data.data.entries
+                                .filter(e => e.explain && !e.explain.includes(text.toLowerCase()))
+                                .slice(0, 3)
+                                .map(e => e.explain);
+                            if (meanings.length > 0) {
+                                inputMeaning.value = meanings.join('; ');
+                                const firstExplain = data.data.entries[0].explain;
+                                const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
+                                if (posMatch) {
+                                    detectedPos.value = [posMatch[1].toLowerCase()];
+                                }
+                                showToast('已获取中文释义');
+                            } else {
+                                showToast('未找到释义', 'error');
                             }
-                            showToast('已获取中文释义');
                         } else {
-                            showToast('未找到释义', 'error');
+                            showToast('未找到该单词', 'error');
+                        }
+                    }
+                } catch {
+                    showToast('获取释义失败', 'error');
+                }
+            } else {
+                try {
+                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(text)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data[0]?.meanings) {
+                            detectedPos.value = [...new Set(data[0].meanings.map(m => m.partOfSpeech))];
+                            const definitions = data[0].meanings.flatMap(m => m.definitions?.slice(0,2).map(d => d.definition) || []);
+                            if (definitions.length > 0) {
+                                inputMeaning.value = definitions.join('; ');
+                                showToast('已获取英文释义');
+                            } else {
+                                showToast('未找到释义', 'error');
+                            }
+                        } else {
+                            showToast('未找到该单词', 'error');
                         }
                     } else {
                         showToast('未找到该单词', 'error');
                     }
+                } catch {
+                    showToast('获取释义失败', 'error');
                 }
-            } catch {
-                showToast('获取释义失败', 'error');
             }
             isLoadingMeaning.value = false;
         };
@@ -1549,26 +1589,42 @@ createApp({
             let pos = detectedPos.value[0] || null;
             
             if (!meaning) {
-                try {
-                    const res = await fetch(`https://dict.youdao.com/suggest?num=3&doctype=json&q=${encodeURIComponent(inputContent.value.trim())}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.data?.entries?.length > 0) {
-                            const meanings = data.data.entries
-                                .filter(e => e.explain && !e.explain.includes(inputContent.value.trim().toLowerCase()))
-                                .slice(0, 2)
-                                .map(e => e.explain);
-                            if (meanings.length > 0) {
-                                meaning = meanings.join('; ');
-                                const firstExplain = data.data.entries[0].explain;
-                                const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
-                                if (posMatch && !pos) {
-                                    pos = posMatch[1].toLowerCase();
+                if (meaningLang.value === 'zh') {
+                    try {
+                        const res = await fetch(`https://dict.youdao.com/suggest?num=3&doctype=json&q=${encodeURIComponent(inputContent.value.trim())}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.data?.entries?.length > 0) {
+                                const meanings = data.data.entries
+                                    .filter(e => e.explain && !e.explain.includes(inputContent.value.trim().toLowerCase()))
+                                    .slice(0, 2)
+                                    .map(e => e.explain);
+                                if (meanings.length > 0) {
+                                    meaning = meanings.join('; ');
+                                    const firstExplain = data.data.entries[0].explain;
+                                    const posMatch = firstExplain.match(/^(adj\.|adv\.|n\.|v\.|vt\.|vi\.|prep\.|conj\.|pron\.|int\.|art\.)\s*/i);
+                                    if (posMatch && !pos) {
+                                        pos = posMatch[1].toLowerCase();
+                                    }
                                 }
                             }
                         }
-                    }
-                } catch {}
+                    } catch {}
+                } else {
+                    try {
+                        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(inputContent.value.trim())}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data[0]?.meanings) {
+                                const definitions = data[0].meanings.flatMap(m => m.definitions?.slice(0,2).map(d => d.definition) || []);
+                                if (definitions.length > 0) {
+                                    meaning = definitions.join('; ');
+                                    if (!pos) pos = data[0].meanings[0]?.partOfSpeech || null;
+                                }
+                            }
+                        }
+                    } catch {}
+                }
             }
             
             const rec = { id: Date.now(), type, content: inputContent.value.trim(), meaning, pos, createdAt: new Date().toISOString() };
@@ -1655,7 +1711,7 @@ createApp({
 
         return {
             isInitialized, isLoggedIn, loginMode, username, password, userInfo, isOfflineMode,
-            currentPage, isLoading, isLoadingMeaning, records, currentType, inputContent, inputMeaning, detectedPos,
+            currentPage, isLoading, isLoadingMeaning, meaningLang, records, currentType, inputContent, inputMeaning, detectedPos,
             searchQuery, filterType, sortOrder, fileInput, showModal, modalItem, toast,
             reciteFilter, isShuffled, revealedIds, shuffledList,
             isDarkMode, editingId, editMeaning, batchMode, selectedIds, favorites, checkins,
